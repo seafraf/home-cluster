@@ -29,7 +29,7 @@ jobs:
 
     - shell: bash
       run: |
-        rsync --recursive --delete '${{steps.build.outputs.out-path}}/' manifests
+        rsync --archive --delete '${{steps.build.outputs.out-path}}/' manifests
 
     - uses: EndBug/add-and-commit@v9
       id: commit
