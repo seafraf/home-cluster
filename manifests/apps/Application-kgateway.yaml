@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kgateway
+  namespace: argocd
+spec:
+  destination:
+    namespace: kgateway-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./manifests/kgateway
+    repoURL: git@github.com:seafraf/home-cluster.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

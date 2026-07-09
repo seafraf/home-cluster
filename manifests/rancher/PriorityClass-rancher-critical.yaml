@@ -1,0 +1,12 @@
+apiVersion: scheduling.k8s.io/v1
+description: Priority class used by pods critical to rancher's functionality.
+globalDefault: false
+kind: PriorityClass
+metadata:
+  labels:
+    app: rancher
+    chart: rancher-2.14.3
+    heritage: Helm
+    release: rancher
+  name: rancher-critical
+value: 1000000000
