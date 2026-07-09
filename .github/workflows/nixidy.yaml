@@ -21,13 +21,10 @@ jobs:
         extra_nix_config: |
           extra-experimental-features = nix-command flakes
 
-    - uses: arnarg/nixidy/actions/build@main
+    - uses: arnarg/nixidy/actions/switch@main
       id: build
       with:
         environment: .#home
-
-    - shell: bash
-      run: rsync -avL --delete "${{ steps.build.outputs.out-path }}/" manifests/
 
     - uses: EndBug/add-and-commit@v9
       id: commit
@@ -42,6 +39,6 @@ jobs:
       if: ${{ steps.commit.outputs.pushed == 'true' }}
       with:
         github_token: ${{github.token}}
-        head: promote/env/dev
+        head: promote/env/home
         base: main
-        title: "chore: promote to dev ${{github.sha}}"
+        title: "chore: promote to home ${{github.sha}}"
