@@ -22,7 +22,6 @@ jobs:
           extra-experimental-features = nix-command flakes
 
     - uses: arnarg/nixidy/actions/switch@main
-      id: build
       with:
         environment: .#home
 
