@@ -28,7 +28,9 @@ jobs:
 
     - shell: bash
       run: |
-        rsync -rL --delete '${{steps.build.outputs.out-path}}/' manifests
+        rm -rf manifests
+        mkdir -p manifests
+        rsync -rL "${{ steps.build.outputs.out-path }}/" manifests/
 
     - uses: EndBug/add-and-commit@v9
       id: commit
