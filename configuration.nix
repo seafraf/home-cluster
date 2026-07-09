@@ -3,7 +3,7 @@
     nixidy = {
       target = {
         repository = "git@github.com:seafraf/home-cluster.git";
-        branch = "main";
+        branch = "manifests/home";
         rootPath = "manifests";
       };
 
