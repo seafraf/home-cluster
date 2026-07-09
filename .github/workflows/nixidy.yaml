@@ -30,7 +30,7 @@ jobs:
       run: |
         rm -rf manifests
         mkdir -p manifests
-        rsync -rL "${{ steps.build.outputs.out-path }}/" manifests/
+        rsync -avL "${{ steps.build.outputs.out-path }}/" manifests/
 
     - uses: EndBug/add-and-commit@v9
       id: commit
