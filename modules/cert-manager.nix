@@ -3,6 +3,8 @@
     namespace = "cert-manager";
     createNamespace = true;
 
+    extraRawYamls = [ ../sops/cloudflare-api-token.enc.yaml ];
+
     helm.releases.cert-manager = {
       chart = charts.jetstack.cert-manager;
       values = {
