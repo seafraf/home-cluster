@@ -121,7 +121,7 @@
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
               name = "sfdr-me";
-              namespace = "kgateway-sytem";
+              namespace = "kgateway-system";
             }
           ];
 
