@@ -8,12 +8,10 @@
 let
   domainName = "sfdr.me";
   gatewayName = "sfdr-me";
-  namespace = "kgateway-system";
+  namespace = "network";
   issuerName = "letsencrypt-cloudflare";
 in
 {
-  nixidy.chartsDir = ../charts;
-
   templates.routeForService = {
     options = with lib; {
       serviceName = mkOption {
@@ -25,6 +23,10 @@ in
       namespace = mkOption {
         type = lib.types.str;
       };
+      sectionName = mkOption {
+        type = lib.types.str;
+        default = "https";
+      }; 
       port = mkOption {
         type = lib.types.ints.u16;
         default = 80;
@@ -108,28 +110,9 @@ in
       };
   };
 
-  applications.kgateway = {
-    namespace = "kgateway-system";
+  applications.network = {
+    namespace = namespace;
     createNamespace = true;
-
-    # CRD annotations are too big and must be applied server side
-    syncPolicy.syncOptions.serverSideApply = true;
-
-    # manually deploy Gateway CRDs, these are not included with the below helm charts
-    yamls = map builtins.toJSON (
-      generators.crdObjects {
-        src = gatewayCrd.source;
-        crdFiles = gatewayCrd.files;
-      }
-    );
-
-    helm.releases.kgateway-crds = {
-      chart = charts.kgateway-dev.kgateway-crds;
-    };
-
-    helm.releases.kgateway = {
-      chart = charts.kgateway-dev.kgateway;
-    };
 
     resources = {
       # LetsEncrypt key generation for Gateways.  Needs dns01 resolution for wildcard domains
@@ -164,7 +147,7 @@ in
         };
 
         spec = {
-          gatewayClassName = "kgateway";
+          gatewayClassName = "cilium";
           listeners = [
             {
               allowedRoutes = {

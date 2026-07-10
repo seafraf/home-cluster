@@ -63,7 +63,7 @@
               ./configuration.nix
               ./modules/rancher.nix
               ./modules/cert-manager.nix
-              ./modules/kgateway.nix
+              ./modules/network.nix
             ];
           };
         };
