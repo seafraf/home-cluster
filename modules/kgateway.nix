@@ -90,6 +90,7 @@
                 mode = "Terminate";
                 certificateRefs = [
                   {
+                    group = "";
                     kind = "Secret";
                     name = "letsencrypt-sfdr-tls";
                   }
@@ -117,6 +118,7 @@
           hostnames = [ "rancher.sfdr.me" ];
           parentRefs = [
             {
+              group = "gateway.networking.k8s.io";
               kind = "Gateway";
               name = "sfdr-me";
               namespace = "kgateway-sytem";
@@ -127,10 +129,20 @@
             {
               backendRefs = [
                 {
+                  group = "";
                   kind = "Service";
                   name = "rancher";
                   namespace = "cattle-system";
                   port = 80;
+                  weight = 1;
+                }
+              ];
+              matches = [
+                {
+                  path = {
+                    type = "PathPrefix";
+                    value = "/";
+                  };
                 }
               ];
             }
