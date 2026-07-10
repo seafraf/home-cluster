@@ -1,18 +1,21 @@
 { nixidy, pkgs, ... }:
 let
   files = [
-    "standard-install.yaml"
+    "config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml"
+    "config/crd/standard/gateway.networking.k8s.io_gateways.yaml"
+    "config/crd/standard/gateway.networking.k8s.io_httproutes.yaml"
+    "config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml"
+    "config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml"
+    "config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml"
   ];
 
-  source = pkgs.linkFarm "gateway-api-crds" [
-    {
-      name = "standard-install.yaml";
-      path = pkgs.fetchurl {
-        url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.1/standard-install.yaml";
-        hash = "sha256-dRACs7kah/euO9JRfHmkeo1+1nApAYCKHPm9l9KE+bg=";
-      };
-    }
-  ];
+  # CRD versions 1.4.1 latest supported by Cilium 1.19.1
+  source = pkgs.fetchFromGitHub {
+    owner = "kubernetes-sigs";
+    repo = "gateway-api";
+    rev = "v1.4.1";
+    hash = "sha256-/GHyikcC2QGDN0ndpY6/xvSEEnpSsLrNU+lFElCKBs8=";
+  };
 in
 {
   module = nixidy.packages.${pkgs.system}.generators.fromCRDModule {

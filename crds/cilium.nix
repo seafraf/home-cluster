@@ -28,8 +28,8 @@ let
   source = pkgs.fetchFromGitHub {
     owner = "cilium";
     repo = "cilium";
-    rev = "v1.19.4";
-    hash = "sha256-DcDhBYowP755z7EQ45189GaFNnYAgfJb4rMLSFF113U=";
+    rev = "v1.19.3";
+    hash = "sha256-KnKGzAEe5K3SA16sNUzFC+bLNOKiKLw1Nwuli1kWTnc=";
   };
 in
 {
