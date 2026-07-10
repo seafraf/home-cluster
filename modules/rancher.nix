@@ -17,25 +17,5 @@
         "1.35.0"
       ];
     };
-
-    resources = {
-      referenceGrants.rancher = {
-        spec = {
-          from = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "HTTPRoute";
-              namespace = "kgateway-system";
-            }
-          ];
-          to = [
-            {
-              group = "";
-              kind = "Service";
-            }
-          ];
-        };
-      };
-    };
   };
 }

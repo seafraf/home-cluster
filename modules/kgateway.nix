@@ -2,10 +2,111 @@
   charts,
   gatewayCrd,
   generators,
+  lib,
   ...
 }:
+let
+  domainName = "sfdr.me";
+  gatewayName = "sfdr-me";
+  namespace = "kgateway-system";
+  issuerName = "letsencrypt-cloudflare";
+in
 {
   nixidy.chartsDir = ../charts;
+
+  templates.routeForService = {
+    options = with lib; {
+      serviceName = mkOption {
+        type = lib.types.str;
+      };
+      subdomain = mkOption {
+        type = lib.types.str;
+      };
+      namespace = mkOption {
+        type = lib.types.str;
+      };
+      port = mkOption {
+        type = lib.types.ints.u16;
+        default = 80;
+      };
+      weight = mkOption {
+        type = lib.types.ints.s32;
+        default = 1;
+      };
+      pathPrefix = mkOption {
+        type = lib.types.str;
+        default = "/";
+      };
+    };
+
+    output =
+      {
+        name,
+        config,
+        ...
+      }:
+      let
+        cfg = config;
+      in
+      {
+        httpRoutes."${name}-${gatewayName}".spec = {
+          hostnames = [ "${cfg.subdomain}.${domainName}" ];
+          parentRefs = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "Gateway";
+              name = gatewayName;
+              namespace = namespace;
+            }
+          ];
+
+          rules = [
+            {
+              backendRefs = [
+                {
+                  group = "";
+                  kind = "Service";
+                  name = cfg.serviceName;
+                  namespace = cfg.namespace;
+                  port = cfg.port;
+                  weight = cfg.weight;
+                }
+              ];
+              matches = [
+                {
+                  path = {
+                    type = "PathPrefix";
+                    value = cfg.pathPrefix;
+                  };
+                }
+              ];
+            }
+          ];
+        };
+
+        referenceGrants."${name}-${gatewayName}" = {
+          metadata = {
+            name = namespace;
+            namespace = cfg.namespace;
+          };
+          spec = {
+            from = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "HTTPRoute";
+                namespace = namespace;
+              }
+            ];
+            to = [
+              {
+                group = "";
+                kind = "Service";
+              }
+            ];
+          };
+        };
+      };
+  };
 
   applications.kgateway = {
     namespace = "kgateway-system";
@@ -32,7 +133,7 @@
 
     resources = {
       # LetsEncrypt key generation for Gateways.  Needs dns01 resolution for wildcard domains
-      issuers.letsencrypt-cloudflare = {
+      issuers."${issuerName}" = {
         spec = {
           acme = {
             email = "seafraf@gmail.com";
@@ -57,9 +158,9 @@
       };
 
       # Gateway for plex.sfdr.me:32400 *.sfdr.me:80 and *.sfdr.me:443
-      gateways.sfdr-me = {
+      gateways."${gatewayName}" = {
         metadata.annotations = {
-          "cert-manager.io/issuer" = "letsencrypt-cloudflare";
+          "cert-manager.io/issuer" = issuerName;
         };
 
         spec = {
@@ -71,7 +172,7 @@
                   from = "All";
                 };
               };
-              hostname = "*.sfdr.me";
+              hostname = "*.${domainName}";
               name = "http";
               port = 80;
               protocol = "HTTP";
@@ -82,7 +183,7 @@
                   from = "All";
                 };
               };
-              hostname = "*.sfdr.me";
+              hostname = "*.${domainName}";
               name = "https";
               port = 443;
               protocol = "HTTPS";
@@ -103,7 +204,7 @@
                   from = "All";
                 };
               };
-              hostname = "plex.sfdr.me";
+              hostname = "plex.${domainName}";
               name = "plex";
               port = 32400;
               protocol = "HTTP";
@@ -111,44 +212,18 @@
           ];
         };
       };
+    };
 
-      # Rancher HTTP Route
-      httpRoutes.rancher-sfdr-me = {
-        spec = {
-          hostnames = [ "rancher.sfdr.me" ];
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = "sfdr-me";
-              namespace = "kgateway-system";
-            }
-          ];
+    templates.routeForService.rancher = {
+      serviceName = "rancher";
+      namespace = "cattle-system";
+      subdomain = "rancher";
+    };
 
-          rules = [
-            {
-              backendRefs = [
-                {
-                  group = "";
-                  kind = "Service";
-                  name = "rancher";
-                  namespace = "cattle-system";
-                  port = 80;
-                  weight = 1;
-                }
-              ];
-              matches = [
-                {
-                  path = {
-                    type = "PathPrefix";
-                    value = "/";
-                  };
-                }
-              ];
-            }
-          ];
-        };
-      };
+    templates.routeForService.argocd = {
+      serviceName = "argocd-server";
+      namespace = "argocd";
+      subdomain = "argocd";
     };
   };
 }
