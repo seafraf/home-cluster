@@ -57,7 +57,7 @@
       };
 
       # Gateway for plex.sfdr.me:32400 *.sfdr.me:80 and *.sfdr.me:443
-      gateways.sfdr-gateway = {
+      gateways.sfdr-me = {
         metadata.annotations = {
           "cert-manager.io/issuer" = "letsencrypt-cloudflare";
         };
@@ -106,6 +106,33 @@
               name = "plex";
               port = 32400;
               protocol = "HTTP";
+            }
+          ];
+        };
+      };
+
+      # Rancher HTTP Route
+      httpRoutes.rancher-sfdr-me = {
+        spec = {
+          hostnames = [ "rancher.sfdr.me" ];
+          parentRefs = [
+            {
+              kind = "Gateway";
+              name = "sfdr-me";
+              namespace = "kgateway-sytem";
+            }
+          ];
+
+          rules = [
+            {
+              backendRefs = [
+                {
+                  kind = "Service";
+                  name = "rancher";
+                  namespace = "cattle-system";
+                  port = 80;
+                }
+              ];
             }
           ];
         };
