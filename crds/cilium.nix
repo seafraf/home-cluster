@@ -1,4 +1,4 @@
-{ nixidy, pkgs }:
+{ nixidy, pkgs, ... }:
 let
   files = [
     # "pkg/k8s/apis/cilium.io/client/crds/v2/ciliumbgpadvertisements.yaml"

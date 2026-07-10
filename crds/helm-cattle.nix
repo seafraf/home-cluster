@@ -1,4 +1,4 @@
-{ nixidy, pkgs }:
+{ nixidy, pkgs, ... }:
 let
   files = [
     "pkg/crds/yaml/generated/helm.cattle.io_helmcharts.yaml"

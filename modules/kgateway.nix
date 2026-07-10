@@ -55,6 +55,61 @@
           };
         };
       };
+
+      # Gateway for plex.sfdr.me:32400 *.sfdr.me:80 and *.sfdr.me:443
+      gateways.sfdr-gateway = {
+        metadata.annotations = {
+          "cert-manager.io/issuer" = "letsencrypt-cloudflare";
+        };
+
+        spec = {
+          gatewayClassName = "kgateway";
+          listeners = [
+            {
+              allowedRoutes = {
+                namespaces = {
+                  from = "All";
+                };
+              };
+              hostname = "*.sfdr.me";
+              name = "http";
+              port = 80;
+              protocol = "HTTP";
+            }
+            {
+              allowedRoutes = {
+                namespaces = {
+                  from = "All";
+                };
+              };
+              hostname = "*.sfdr.me";
+              name = "https";
+              port = 443;
+              protocol = "HTTPS";
+              tls = {
+                mode = "Terminate";
+                certificateRefs = [
+                  {
+                    kind = "Secret";
+                    name = "letsencrypt-sfdr-tls";
+                  }
+                ];
+              };
+            }
+            {
+              allowedRoutes = {
+                namespaces = {
+                  from = "All";
+                };
+              };
+              hostname = "plex.sfdr.me";
+              name = "plex";
+              port = 32400;
+              protocol = "HTTP";
+            }
+          ];
+        };
+      };
     };
   };
 }

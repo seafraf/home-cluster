@@ -1,4 +1,4 @@
-{ nixidy, pkgs }:
+{ nixidy, pkgs, ... }:
 let
   files = [
     "standard-install.yaml"
