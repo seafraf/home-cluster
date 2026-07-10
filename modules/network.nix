@@ -26,7 +26,7 @@ in
       sectionName = mkOption {
         type = lib.types.str;
         default = "https";
-      }; 
+      };
       port = mkOption {
         type = lib.types.ints.u16;
         default = 80;
@@ -113,6 +113,16 @@ in
   applications.network = {
     namespace = namespace;
     createNamespace = true;
+
+    # CRD annotations are too big and must be applied server side
+    syncPolicy.syncOptions.serverSideApply = true;
+
+    yamls = map builtins.toJSON (
+      generators.crdObjects {
+        src = gatewayCrd.source;
+        crdFiles = gatewayCrd.files;
+      }
+    );
 
     resources = {
       # LetsEncrypt key generation for Gateways.  Needs dns01 resolution for wildcard domains
