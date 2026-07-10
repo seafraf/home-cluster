@@ -37,7 +37,7 @@
           acme = {
             email = "seafraf@gmail.com";
             privateKeySecretRef = {
-              name = " letsencrypt-cloudflare";
+              name = "letsencrypt-cloudflare";
             };
             server = "https://acme-v02.api.letsencrypt.org/directory";
             solvers = [
