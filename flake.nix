@@ -26,18 +26,20 @@
     (flake-utils.lib.eachDefaultSystem (
       system:
       let
+        charts = nixhelm.chartsDerivations.${system};
         pkgs = import nixpkgs { inherit system; };
 
         crdSources = {
           gatewayCrd = ./crds/gateway.nix;
           helmCattleCrd = ./crds/helm-cattle.nix;
           ciliumCrd = ./crds/cilium.nix;
+          certManagerCrd = ./crds/cert-manager.nix;
         };
 
         crds = builtins.mapAttrs (
           _: path:
           import path {
-            inherit nixidy pkgs;
+            inherit nixidy pkgs charts;
           }
         ) crdSources;
 
@@ -46,8 +48,7 @@
         packages.nixidy = nixidy.packages.${system}.default;
 
         nixidyEnvs = nixidy.lib.mkEnvs {
-          inherit pkgs;
-          charts = nixhelm.chartsDerivations.${system};
+          inherit pkgs charts;
 
           envs.home = {
             modules = [
