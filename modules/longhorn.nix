@@ -1,0 +1,53 @@
+{ charts, ... }:
+let
+  domainName = "sforder.me";
+  gatewayName = "sforder-me";
+  gatewayNamespace = "network";
+  namespace = "longhorn-system";
+in
+{
+  applications.longhorn = {
+    namespace = namespace;
+    createNamespace = true;
+
+    helm.releases.longhorn = {
+      chart = charts.longhorn.longhorn;
+      values = {
+        networkPolicies = {
+          enabled = false;
+          type = "rke2";
+        };
+
+        service.ui.type = "ClusterIP";
+
+        persistence = {
+          defaultClassReplicaCount = 1;
+        };
+
+        csi = {
+          attacherReplicaCount = 1;
+          provisionerReplicaCount = 1;
+          resizerReplicaCount = 1;
+          snapshotterReplicaCount = 1;
+        };
+
+        longhornUI.replicas = 1;
+
+        httproute = {
+          enabled = true;
+          hostnames = [ "longhorn.${domainName}" ];
+          parentRefs = [
+            {
+              group = "gateway.networking.k8s.io";
+              kind = "Gateway";
+              name = gatewayName;
+              namespace = gatewayNamespace;
+            }
+          ];
+        };
+
+        preUpgradeChecker.jobEnabled = false;
+      };
+    };
+  };
+}

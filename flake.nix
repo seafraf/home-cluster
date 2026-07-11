@@ -64,6 +64,7 @@
               ./modules/rancher.nix
               ./modules/cert-manager.nix
               ./modules/network.nix
+              ./modules/longhorn.nix
             ];
           };
         };
