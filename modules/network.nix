@@ -6,8 +6,8 @@
   ...
 }:
 let
-  domainName = "sfdr.me";
-  gatewayName = "sfdr-me";
+  domainName = "sforder.me";
+  gatewayName = "sforder-me";
   namespace = "network";
   issuerName = "letsencrypt-cloudflare";
 in
@@ -113,7 +113,7 @@ in
   applications.network = {
     namespace = namespace;
     createNamespace = true;
-    
+
     resources = {
       # LetsEncrypt key generation for Gateways.  Needs dns01 resolution for wildcard domains
       issuers."${issuerName}" = {
@@ -140,7 +140,6 @@ in
         };
       };
 
-      # Gateway for plex.sfdr.me:32400 *.sfdr.me:80 and *.sfdr.me:443
       gateways."${gatewayName}" = {
         metadata.annotations = {
           "cert-manager.io/issuer" = issuerName;
@@ -176,7 +175,7 @@ in
                   {
                     group = "";
                     kind = "Secret";
-                    name = "letsencrypt-sfdr-tls";
+                    name = "letsencrypt-${gatewayName}-tls";
                   }
                 ];
               };
