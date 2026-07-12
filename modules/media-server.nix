@@ -206,6 +206,9 @@ in
   };
 
   applications.media-server = {
+    namespace = namespace;
+    createNamespace = true;
+
     resources = {
       # Grant HTTPRoutes in this namespace to access the Gateway in the network namespace
       referenceGrants."${namespace}-${gatewayName}" = {
