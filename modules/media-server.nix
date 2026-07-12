@@ -175,7 +175,7 @@ in
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
               name = gatewayName;
-              namespace = namespace;
+              namespace = gatewayNamespace;
             }
           ];
 
