@@ -11,12 +11,18 @@ let
   gatewayNamespace = "network";
 
   volumes =
-    { appName }:
+    { appName, configDir }:
     [
       {
         name = "${namespace}-config";
         size = "128Gi"; # Should be rather large
-        path = "/config/${appName}";
+        path = configDir;
+        subPath = appName;
+      }
+      {
+        name = "${namespace}-download";
+        size = "128Gi";
+        path = "/media/download";
       }
       {
         name = "${namespace}-anime";
@@ -41,6 +47,7 @@ let
       subdomain = "plex";
       image = "linuxserver/plex:version-1.43.2.10687-563d026ea";
       port = 32400;
+      configDir = "/config";
       env = [
         {
           name = "NVIDIA_VISIBLE_DEVICES";
@@ -57,10 +64,74 @@ let
       subdomain = "jellyfin";
       image = "linuxserver/jellyfin:10.11.11";
       port = 8096;
+      configDir = "/config";
       env = [
         {
           name = "JELLYFIN_PublishedServerUrl";
           value = "jellyfin.${domainName}";
+        }
+      ];
+    }
+    {
+      name = "decypharr";
+      subdomain = "dl";
+      image = "cy01/blackhole:v2.3";
+      port = 8282;
+      configDir = "/app";
+    }
+    {
+      name = "seer";
+      subdomain = "request";
+      image = "ghcr.io/seerr-team/seerr:v3.3.0";
+      port = 5055;
+      configDir = "/app/config";
+    }
+    {
+      name = "prowlarr";
+      subdomain = "prowlarr";
+      image = "linuxserver/prowlarr:2.4.0";
+      port = 9696;
+      configDir = "/config";
+    }
+    {
+      name = "radarr";
+      subdomain = "radarr";
+      image = "linuxserver/prowlarr:6.1.1";
+      port = 7878;
+      configDir = "/config";
+    }
+    {
+      name = "sonarr";
+      subdomain = "sonarr";
+      image = "linuxserver/sonarr:4.0.19";
+      port = 8989;
+      configDir = "/config";
+    }
+    {
+      name = "sonarr";
+      subdomain = "sonarr";
+      image = "linuxserver/sonarr:4.0.19";
+      port = 8989;
+      configDir = "/config";
+    }
+    {
+      name = "transmission";
+      subdomain = "tx";
+      image = "linuxserver/transmission:4.1.3";
+      port = 9091;
+      configDir = "/config";
+      env = [
+        {
+          name = "USER";
+          value = "root";
+        }
+        {
+          name = "PASS";
+          valueFrom.secretKeyRef = {
+            key = "password";
+            name = "transmission-password";
+            optional = false;
+          };
         }
       ];
     }
@@ -83,6 +154,9 @@ in
       };
       env = mkOption {
         default = [ ];
+      };
+      configDir = mkOption {
+        type = lib.types.str;
       };
       id = mkOption {
         type = lib.types.ints.u8;
@@ -132,9 +206,11 @@ in
                     (v: {
                       name = v.name;
                       mountPath = v.path;
+                      subPath = v.subPath or null;
                     })
                     (volumes {
                       appName = name;
+                      configDir = cfg.configDir;
                     });
               };
 
@@ -148,6 +224,7 @@ in
                   })
                   (volumes {
                     appName = name;
+                    configDir = cfg.configDir;
                   });
             };
           };
@@ -238,7 +315,8 @@ in
             };
           })
           (volumes {
-            appName = "myapp";
+            appName = "";
+            configDir = "";
           })
       );
     };
