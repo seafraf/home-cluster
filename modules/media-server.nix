@@ -96,7 +96,7 @@ let
     {
       name = "radarr";
       subdomain = "radarr";
-      image = "linuxserver/prowlarr:6.1.1";
+      image = "linuxserver/radarr:6.1.1";
       port = 7878;
       configDir = "/config";
     }
