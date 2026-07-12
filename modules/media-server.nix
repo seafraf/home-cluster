@@ -161,7 +161,7 @@ in
         services."${name}".spec = {
           selector = labels;
           ports.http = {
-            port = 80;
+            port = cfg.port;
             targetPort = cfg.port;
             appProtocol = "http";
           };
