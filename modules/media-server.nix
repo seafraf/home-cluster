@@ -39,7 +39,7 @@ let
     {
       name = "plex";
       subdomain = "plex";
-      image = "linuxserver/plex";
+      image = "linuxserver/plex:version-1.43.2.10687-563d026ea";
       port = 32400;
       env = [
         {
@@ -50,17 +50,12 @@ let
           name = "NVIDIA_DRIVER_CAPABILITIES";
           value = "all";
         }
-        # todo: versioning
-        # {
-        #   name = "VERSION";
-        #   value = "latest"
-        # }
       ];
     }
     {
       name = "jellyfin";
       subdomain = "jellyfin";
-      image = "linuxserver/jellyfin";
+      image = "linuxserver/jellyfin:10.11.11";
       port = 8096;
       env = [
         {
