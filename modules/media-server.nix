@@ -137,7 +137,6 @@ in
                     (v: {
                       name = v.name;
                       mountPath = v.path;
-                      subPath = "/";
                     })
                     (volumes {
                       appName = name;
