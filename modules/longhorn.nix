@@ -49,5 +49,29 @@ in
         preUpgradeChecker.jobEnabled = false;
       };
     };
+
+    resources.storageClasses.longhorn-hdd = {
+      provisioner = "driver.longhorn.io";
+      parameters = {
+        numberOfReplicas = "1";
+        diskSelector = "hdd";
+      };
+    };
+
+    resources.storageClasses.longhorn-ssd = {
+      provisioner = "driver.longhorn.io";
+      parameters = {
+        numberOfReplicas = "1";
+        diskSelector = "ssd";
+      };
+    };
+
+    resources.storageClasses.longhorn-nvme = {
+      provisioner = "driver.longhorn.io";
+      parameters = {
+        numberOfReplicas = "1";
+        diskSelector = "nvme";
+      };
+    };
   };
 }

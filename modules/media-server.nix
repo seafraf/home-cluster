@@ -18,26 +18,31 @@ let
         size = "128Gi"; # Should be rather large
         path = configDir;
         subPath = appName;
+        class = "longhorn-ssd";
       }
       {
         name = "${namespace}-download";
-        size = "128Gi";
+        size = "256Gi";
         path = "/media/download";
+        class = "longhorn-hdd";
       }
       {
         name = "${namespace}-anime";
-        size = "128Gi";
+        size = "1Ti";
         path = "/media/anime";
+        class = "longhorn-hdd";
       }
       {
         name = "${namespace}-series";
-        size = "128Gi";
+        size = "1Ti";
         path = "/media/series";
+        class = "longhorn-hdd";
       }
       {
         name = "${namespace}-movies";
-        size = "128Gi";
+        size = "1Ti";
         path = "/media/movies";
+        class = "longhorn-hdd";
       }
     ];
 
@@ -318,6 +323,7 @@ in
         map
           (v: {
             name = v.name;
+            storageClass = v.class;
             value = {
               spec = {
                 accessModes = [ "ReadWriteOnce" ];
