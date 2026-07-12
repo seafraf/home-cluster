@@ -176,6 +176,9 @@ in
         labels = {
           "app.kubernetes.io/name" = cfg.name;
         };
+
+        pgid = 2000;
+        puid = "1" + lib.fixedWidthString 3 "0" (toString config.id);
       in
       {
         deployments."${name}".spec = {
@@ -189,10 +192,14 @@ in
                 env = [
                   {
                     name = "PUID";
-                    value = "1" + lib.fixedWidthString 3 "0" (toString cfg.id);
+                    value = puid;
                   }
                   {
                     name = "PGID";
+                    value = toString pgid;
+                  }
+                  {
+                    name = "TZ";
                     value = "Europe/Stockholm";
                   }
                   {
@@ -213,6 +220,8 @@ in
                       configDir = cfg.configDir;
                     });
               };
+
+              securityContext.fsGroup = pgid;
 
               volumes =
                 map
