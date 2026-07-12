@@ -289,6 +289,8 @@ in
     namespace = namespace;
     createNamespace = true;
 
+    extraRawYamls = [ ../sops/transmission-password.enc.yaml ];
+
     resources = {
       # Grant HTTPRoutes in this namespace to access the Gateway in the network namespace
       referenceGrants."${namespace}-${gatewayName}" = {
