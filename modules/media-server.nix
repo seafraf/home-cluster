@@ -327,6 +327,7 @@ in
             value = {
               spec = {
                 accessModes = [ "ReadWriteOnce" ];
+                storageClassName = v.class;
                 resources.requests.storage = v.size;
               };
             };
