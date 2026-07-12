@@ -6,8 +6,8 @@
   ...
 }:
 let
-  domainName = "sforder.me";
-  gatewayName = "sforder-me";
+  domainName = "sfdr.me";
+  gatewayName = "sfdr-me";
   namespace = "network";
   issuerName = "letsencrypt-cloudflare";
 in

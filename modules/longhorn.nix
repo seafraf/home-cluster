@@ -1,7 +1,7 @@
 { charts, ... }:
 let
-  domainName = "sforder.me";
-  gatewayName = "sforder-me";
+  domainName = "sfdr.me";
+  gatewayName = "sfdr-me";
   gatewayNamespace = "network";
   namespace = "longhorn-system";
 in

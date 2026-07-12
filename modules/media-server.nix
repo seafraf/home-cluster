@@ -6,8 +6,8 @@
 }:
 let
   namespace = "media-server";
-  domainName = "sforder.me";
-  gatewayName = "sforder-me";
+  domainName = "sfdr.me";
+  gatewayName = "sfdr-me";
   gatewayNamespace = "network";
 
   volumes =
