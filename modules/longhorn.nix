@@ -52,6 +52,7 @@ in
 
     resources.storageClasses.longhorn-hdd = {
       provisioner = "driver.longhorn.io";
+      allowVolumeExpansion = true;
       parameters = {
         numberOfReplicas = "1";
         diskSelector = "hdd";
@@ -60,6 +61,7 @@ in
 
     resources.storageClasses.longhorn-ssd = {
       provisioner = "driver.longhorn.io";
+      allowVolumeExpansion = true;
       parameters = {
         numberOfReplicas = "1";
         diskSelector = "ssd";
@@ -68,6 +70,7 @@ in
 
     resources.storageClasses.longhorn-nvme = {
       provisioner = "driver.longhorn.io";
+      allowVolumeExpansion = true;
       parameters = {
         numberOfReplicas = "1";
         diskSelector = "nvme";
