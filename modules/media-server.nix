@@ -28,7 +28,7 @@ let
       }
       {
         name = "${namespace}-anime";
-        size = "1Ti";
+        size = "2Ti";
         path = "/media/anime";
         class = "longhorn-hdd";
       }
