@@ -42,6 +42,14 @@
           domain = "sfdr.me";
         };
 
+        # key is disk tag, value is StorageClass name
+        # all storage classes match any node for now
+        storage = {
+          nvme = "longhorn-nvme";
+          ssd = "longhorn-ssd";
+          hdd = "longhorn-hdd";
+        };
+
         crds = builtins.mapAttrs (
           _: path:
           import path {
@@ -64,7 +72,7 @@
 
               {
                 _module.args = {
-                  inherit crds network;
+                  inherit crds network storage;
                 };
               }
 

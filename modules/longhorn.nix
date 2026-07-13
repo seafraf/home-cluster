@@ -1,6 +1,12 @@
-{ charts, network, ... }:
+{
+  charts,
+  network,
+  storage,
+  lib,
+  ...
+}:
 let
-  inherit network;
+  inherit network storage lib;
 
   namespace = "longhorn-system";
 in
@@ -49,31 +55,16 @@ in
       };
     };
 
-    resources.storageClasses.longhorn-hdd = {
-      provisioner = "driver.longhorn.io";
-      allowVolumeExpansion = true;
-      parameters = {
-        numberOfReplicas = "1";
-        diskSelector = "hdd";
+    resources.storageClasses = lib.mapAttrs' (disk: className: {
+      name = className;
+      value = {
+        provisioner = "driver.longhorn.io";
+        allowVolumeExpansion = true;
+        parameters = {
+          numberOfReplicas = "1";
+          diskSelector = disk;
+        };
       };
-    };
-
-    resources.storageClasses.longhorn-ssd = {
-      provisioner = "driver.longhorn.io";
-      allowVolumeExpansion = true;
-      parameters = {
-        numberOfReplicas = "1";
-        diskSelector = "ssd";
-      };
-    };
-
-    resources.storageClasses.longhorn-nvme = {
-      provisioner = "driver.longhorn.io";
-      allowVolumeExpansion = true;
-      parameters = {
-        numberOfReplicas = "1";
-        diskSelector = "nvme";
-      };
-    };
+    }) storage;
   };
 }

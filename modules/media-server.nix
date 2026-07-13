@@ -3,13 +3,14 @@
   lib,
   options,
   network,
+  storage,
   ...
 }:
 let
-  inherit network;
+  inherit network storage;
 
   namespace = "media-server";
-  
+
   volumes =
     { appName, configDir }:
     [
@@ -18,31 +19,31 @@ let
         size = "128Gi"; # Should be rather large
         path = configDir;
         subPath = appName;
-        class = "longhorn-ssd";
+        class = storage.ssd;
       }
       {
         name = "${namespace}-download";
         size = "256Gi";
         path = "/media/download";
-        class = "longhorn-hdd";
+        class = storage.hdd;
       }
       {
         name = "${namespace}-anime";
         size = "2Ti";
         path = "/media/anime";
-        class = "longhorn-hdd";
+        class = storage.hdd;
       }
       {
         name = "${namespace}-series";
         size = "5Ti";
         path = "/media/series";
-        class = "longhorn-hdd";
+        class = storage.hdd;
       }
       {
         name = "${namespace}-movies";
         size = "1Ti";
         path = "/media/movies";
-        class = "longhorn-hdd";
+        class = storage.hdd;
       }
     ];
 
