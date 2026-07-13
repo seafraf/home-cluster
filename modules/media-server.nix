@@ -34,7 +34,7 @@ let
       }
       {
         name = "${namespace}-series";
-        size = "1Ti";
+        size = "5Ti";
         path = "/media/series";
         class = "longhorn-hdd";
       }
