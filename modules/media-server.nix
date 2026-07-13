@@ -41,7 +41,7 @@ let
       }
       {
         name = "${namespace}-movies";
-        size = "1Ti";
+        size = "3Ti";
         path = "/media/movies";
         class = storage.hdd;
       }
