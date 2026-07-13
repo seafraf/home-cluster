@@ -2,14 +2,14 @@
   charts,
   lib,
   options,
+  network,
   ...
 }:
 let
-  namespace = "media-server";
-  domainName = "sfdr.me";
-  gatewayName = "sfdr-me";
-  gatewayNamespace = "network";
+  inherit network;
 
+  namespace = "media-server";
+  
   volumes =
     { appName, configDir }:
     [
@@ -73,7 +73,7 @@ let
       env = [
         {
           name = "JELLYFIN_PublishedServerUrl";
-          value = "jellyfin.${domainName}";
+          value = "jellyfin.${network.domain}";
         }
       ];
     }
@@ -253,14 +253,14 @@ in
           };
         };
 
-        httpRoutes."${name}-${gatewayName}".spec = {
-          hostnames = [ "${cfg.subdomain}.${domainName}" ];
+        httpRoutes."${name}-${network.gateway}".spec = {
+          hostnames = [ "${cfg.subdomain}.${network.domain}" ];
           parentRefs = [
             {
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
-              name = gatewayName;
-              namespace = gatewayNamespace;
+              name = network.gateway;
+              namespace = network.namespace;
             }
           ];
 
@@ -298,9 +298,9 @@ in
 
     resources = {
       # Grant HTTPRoutes in this namespace to access the Gateway in the network namespace
-      referenceGrants."${namespace}-${gatewayName}" = {
+      referenceGrants."${namespace}-${network.gateway}" = {
         metadata = {
-          namespace = gatewayNamespace;
+          namespace = network.namespace;
         };
         spec = {
           from = [

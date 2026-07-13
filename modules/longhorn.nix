@@ -1,8 +1,7 @@
-{ charts, ... }:
+{ charts, network, ... }:
 let
-  domainName = "sfdr.me";
-  gatewayName = "sfdr-me";
-  gatewayNamespace = "network";
+  inherit network;
+
   namespace = "longhorn-system";
 in
 {
@@ -35,13 +34,13 @@ in
 
         httproute = {
           enabled = true;
-          hostnames = [ "longhorn.${domainName}" ];
+          hostnames = [ "longhorn.${network.domain}" ];
           parentRefs = [
             {
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
-              name = gatewayName;
-              namespace = gatewayNamespace;
+              name = network.gateway;
+              namespace = network.namespace;
             }
           ];
         };

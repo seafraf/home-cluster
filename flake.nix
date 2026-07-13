@@ -36,6 +36,12 @@
           certManagerCrd = ./crds/cert-manager.nix;
         };
 
+        network = {
+          gateway = "sfdr-me";
+          namespace = "network";
+          domain = "sfdr.me";
+        };
+
         crds = builtins.mapAttrs (
           _: path:
           import path {
@@ -57,7 +63,9 @@
               }
 
               {
-                _module.args = crds;
+                _module.args = {
+                  inherit crds network;
+                };
               }
 
               ./configuration.nix

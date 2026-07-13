@@ -1,4 +1,4 @@
-{ charts, ... }: {
+{ charts, network, ... }: {
   applications.rancher = {
     namespace = "cattle-system";
     createNamespace = true;
@@ -6,7 +6,7 @@
     helm.releases.rancher = {
       chart = charts.rancher.rancher;
       values = {
-        hostname = "rancher.sfdr.me";
+        hostname = "rancher.${network.domain}";
         networkExposure.type = "none";
         ingress.enabled = false;
         replicas = 1;

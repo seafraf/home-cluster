@@ -3,12 +3,13 @@
   gatewayCrd,
   generators,
   lib,
+  network,
   ...
 }:
 let
-  domainName = "sfdr.me";
-  gatewayName = "sfdr-me";
-  namespace = "network";
+  inherit network;
+
+  namespace = network.namespace;
   issuerName = "letsencrypt-cloudflare";
 in
 {
@@ -51,13 +52,13 @@ in
         cfg = config;
       in
       {
-        httpRoutes."${name}-${gatewayName}".spec = {
-          hostnames = [ "${cfg.subdomain}.${domainName}" ];
+        httpRoutes."${name}-${network.gateway}".spec = {
+          hostnames = [ "${cfg.subdomain}.${network.domain}" ];
           parentRefs = [
             {
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
-              name = gatewayName;
+              name = network.gateway;
               namespace = namespace;
             }
           ];
@@ -86,7 +87,7 @@ in
           ];
         };
 
-        referenceGrants."${name}-${gatewayName}" = {
+        referenceGrants."${name}-${network.gateway}" = {
           metadata = {
             name = namespace;
             namespace = cfg.namespace;
@@ -140,7 +141,7 @@ in
         };
       };
 
-      gateways."${gatewayName}" = {
+      gateways."${network.gateway}" = {
         metadata.annotations = {
           "cert-manager.io/issuer" = issuerName;
         };
@@ -154,7 +155,7 @@ in
                   from = "All";
                 };
               };
-              hostname = "*.${domainName}";
+              hostname = "*.${network.domain}";
               name = "http";
               port = 80;
               protocol = "HTTP";
@@ -165,7 +166,7 @@ in
                   from = "All";
                 };
               };
-              hostname = "*.${domainName}";
+              hostname = "*.${network.domain}";
               name = "https";
               port = 443;
               protocol = "HTTPS";
@@ -175,7 +176,7 @@ in
                   {
                     group = "";
                     kind = "Secret";
-                    name = "letsencrypt-${gatewayName}-tls";
+                    name = "letsencrypt-${network.gateway}-tls";
                   }
                 ];
               };
@@ -186,7 +187,7 @@ in
                   from = "All";
                 };
               };
-              hostname = "plex.${domainName}";
+              hostname = "plex.${network.domain}";
               name = "plex";
               port = 32400;
               protocol = "HTTP";

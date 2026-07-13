@@ -1,5 +1,12 @@
-{ charts, lib, ... }:
+{
+  charts,
+  lib,
+  network,
+  ...
+}:
 let
+  inherit network;
+
   name = "authelia";
 
   labels = {
@@ -13,9 +20,6 @@ let
   configEntryName = "configuration.yaml";
 
   subdomain = "auth";
-  domainName = "sfdr.me";
-  gatewayName = "sfdr-me";
-  gatewayNamespace = "network";
 
   port = 9091;
 in
@@ -93,14 +97,14 @@ in
         ];
       };
 
-      httpRoutes."${subdomain}-${gatewayName}".spec = {
-        hostnames = [ "${subdomain}.${domainName}" ];
+      httpRoutes."${subdomain}-${network.gateway}".spec = {
+        hostnames = [ "${subdomain}.${network.domain}" ];
         parentRefs = [
           {
             group = "gateway.networking.k8s.io";
             kind = "Gateway";
-            name = gatewayName;
-            namespace = gatewayNamespace;
+            name = network.gateway;
+            namespace = network.namespace;
           }
         ];
 
@@ -128,9 +132,9 @@ in
         ];
       };
 
-      referenceGrants."${namespace}-${gatewayName}" = {
+      referenceGrants."${namespace}-${network.gateway}" = {
         metadata = {
-          namespace = gatewayNamespace;
+          namespace = network.namespace;
         };
         spec = {
           from = [
