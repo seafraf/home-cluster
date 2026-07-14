@@ -22,6 +22,13 @@ let
         class = storage.ssd;
       }
       {
+        name = "${namespace}-transcode";
+        size = "256Gi";
+        path = "/media/transcode";
+        subPath = appName;
+        class = storage.ssd;
+      }
+      {
         name = "${namespace}-download";
         size = "256Gi";
         path = "/media/download";
@@ -54,16 +61,7 @@ let
       image = "linuxserver/plex:version-1.43.2.10687-563d026ea";
       port = 32400;
       configDir = "/config";
-      env = [
-        {
-          name = "NVIDIA_VISIBLE_DEVICES";
-          value = "all";
-        }
-        {
-          name = "NVIDIA_DRIVER_CAPABILITIES";
-          value = "all";
-        }
-      ];
+      runtimeClassName = "nvidia";
     }
     {
       name = "jellyfin";
@@ -71,6 +69,7 @@ let
       image = "linuxserver/jellyfin:10.11.11";
       port = 8096;
       configDir = "/config";
+      runtimeClassName = "nvidia";
       env = [
         {
           name = "JELLYFIN_PublishedServerUrl";
@@ -158,11 +157,15 @@ in
       port = mkOption {
         type = lib.types.ints.u16;
       };
+      configDir = mkOption {
+        type = lib.types.str;
+      };
       env = mkOption {
         default = [ ];
       };
-      configDir = mkOption {
+      runtimeClassName = mkOption {
         type = lib.types.str;
+        default = "crun";
       };
       id = mkOption {
         type = lib.types.ints.u8;
@@ -193,6 +196,9 @@ in
           template = {
             metadata.labels = labels;
             spec = {
+              runtimeClassName = cfg.runtimeClassName;
+              securityContext.fsGroup = pgid;
+
               containers."${name}" = {
                 image = cfg.image;
                 env = [
@@ -226,8 +232,6 @@ in
                       configDir = cfg.configDir;
                     });
               };
-
-              securityContext.fsGroup = pgid;
 
               volumes =
                 map
