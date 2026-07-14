@@ -82,7 +82,7 @@
               ./modules/network.nix
               ./modules/longhorn.nix
               ./modules/media-server.nix
-              # ./modules/auth.nix
+              ./modules/auth.nix
             ];
           };
         };
