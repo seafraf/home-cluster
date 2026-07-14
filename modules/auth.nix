@@ -54,6 +54,8 @@ let
     webPort = 17170;
     ldapPort = 3890;
     ldapsPort = 6360;
+
+    baseDn = "DC=${network.sld},DC=${network.tld}";
   };
 in
 {
@@ -76,8 +78,11 @@ in
 
             ldap = {
               address = "ldap://${lldap.name}.${namespace}.svc.cluster.local:${toString lldap.ldapPort}";
-              user = "admin";
               implementation = "lldap";
+
+              base_dn = lldap.baseDn;
+
+              user = "UID=admin,OU=people,DC=${network.sld},DC=${network.tld}";
             };
           };
 
@@ -271,7 +276,7 @@ in
                 }
                 {
                   name = "LLDAP_LDAP_BASE_DN";
-                  value = "dc=${network.sld},dc=${network.tld}";
+                  value = lldap.baseDn;
                 }
                 {
                   name = "LLDAP_LDAP_USER_PASS";
