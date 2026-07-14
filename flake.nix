@@ -37,9 +37,11 @@
         };
 
         network = {
-          gateway = "sfdr-me";
+          sld = "sfdr";
+          tld = "me";
+          gateway = "${network.sld}-${network.tld}";
           namespace = "network";
-          domain = "sfdr.me";
+          domain = "${network.sld}.${network.tld}";
         };
 
         # key is disk tag, value is StorageClass name

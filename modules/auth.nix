@@ -269,10 +269,10 @@ in
                     key = "LLDAP_KEY_SEED";
                   };
                 }
-                # {
-                #   name = "LLDAP_LDAP_BASE_DN";
-                #   value = "dc={}"
-                # }
+                {
+                  name = "LLDAP_LDAP_BASE_DN";
+                  value = "dc=${network.sld},dc=${network.tld}";
+                }
                 {
                   name = "LLDAP_LDAP_USER_PASS";
                   valueFrom.secretKeyRef = {
