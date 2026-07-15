@@ -60,6 +60,7 @@ in
       value = {
         provisioner = "driver.longhorn.io";
         allowVolumeExpansion = true;
+        reclaimPolicy = "Retain";
         parameters = {
           numberOfReplicas = "1";
           diskSelector = disk;
