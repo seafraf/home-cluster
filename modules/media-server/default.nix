@@ -200,12 +200,15 @@ in
       };
 
       persistentVolumeClaims =
-        lib.mapAttrs
-          (name: value: {
-            spec = {
-              accessModes = [ "ReadWriteOnce" ];
-              storageClassName = value.class;
-              resources.requests.storage = value.size;
+        lib.mapAttrs'
+          (_: value: {
+            name = value.name;
+            value = {
+              spec = {
+                accessModes = [ "ReadWriteOnce" ];
+                storageClassName = value.class;
+                resources.requests.storage = value.size;
+              };
             };
           })
           (
