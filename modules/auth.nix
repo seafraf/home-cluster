@@ -57,6 +57,16 @@ let
 
     baseDn = "DC=${network.sld},DC=${network.tld}";
   };
+
+  caddy = {
+    name = "caddy";
+    image = "caddy:2.11.4";
+    labels = {
+      "app.kubernetes.io/name" = caddy.name;
+    };
+
+    port = 80;
+  };
 in
 {
   applications.auth = {
@@ -417,6 +427,68 @@ in
       };
 
       ## caddy
+      configMaps."${caddy.name}" = {
+        data.Caddyfile = ''
+          {
+            auto_https off
+          }
+
+          auth.sfdr.me:80 {
+            reverse_proxy ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port}
+          }
+
+          testing.sfdr.me:80 {
+            forward_auth ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port} {
+                uri /api/authz/forward-auth
+
+                copy_headers \
+                    Remote-User \
+                    Remote-Groups \
+                    Remote-Name \
+                    Remote-Email
+            }
+
+            reverse_proxy longhorn-frontend.longhorn-system.svc.cluster.local:80
+          }
+        '';
+      };
+
+      deployments."${caddy.name}".spec = {
+        replicas = 1;
+        selector.matchLabels = caddy.labels;
+        template = {
+          metadata.labels = caddy.labels;
+          spec = {
+            containers.caddy = {
+              image = caddy.image;
+              volumeMounts = [
+                {
+                  name = "config";
+                  mountPath = "/etc/caddy/Caddyfile";
+                  subPath = "Caddyfile";
+                }
+              ];
+            };
+            volumes = [
+              {
+                name = "config";
+                configMap.name = caddy.name;
+              }
+            ];
+          };
+        };
+      };
+
+      services."${caddy.name}".spec = {
+        selector = caddy.labels;
+        ports = [
+          {
+            name = "http";
+            port = 80;
+            targetPort = 80;
+          }
+        ];
+      };
 
       ## other
       referenceGrants."${namespace}-${network.gateway}" = {

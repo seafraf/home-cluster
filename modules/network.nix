@@ -208,5 +208,11 @@ in
       namespace = "argocd";
       subdomain = "argocd";
     };
+
+    templates.routeForService.test = {
+      serviceName = "caddy";
+      namespace = "auth-system";
+      subdomain = "testing";
+    };
   };
 }
