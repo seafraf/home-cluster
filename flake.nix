@@ -83,7 +83,7 @@
               ./modules/cert-manager.nix
               ./modules/network.nix
               ./modules/longhorn.nix
-              ./modules/media-server.nix
+              ./modules/media-server
               ./modules/auth.nix
             ];
           };
