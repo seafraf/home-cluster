@@ -164,8 +164,8 @@ in
         default = [ ];
       };
       runtimeClassName = mkOption {
-        type = lib.types.str;
-        default = "crun";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
       };
       id = mkOption {
         type = lib.types.ints.u8;
@@ -196,7 +196,6 @@ in
           template = {
             metadata.labels = labels;
             spec = {
-              runtimeClassName = cfg.runtimeClassName;
               securityContext.fsGroup = pgid;
 
               containers."${name}" = {
@@ -245,6 +244,9 @@ in
                     appName = name;
                     configDir = cfg.configDir;
                   });
+            }
+            // lib.optionalAttrs (cfg.runtimeClassName != null) {
+              runtimeClassName = cfg.runtimeClassName;
             };
           };
         };
