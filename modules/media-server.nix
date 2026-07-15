@@ -58,10 +58,26 @@ let
     {
       name = "plex";
       subdomain = "plex";
-      image = "linuxserver/plex:version-1.43.2.10687-563d026ea";
+      image = "linuxserver/plex:version-1.43.3.10828-00f62d37d";
       port = 32400;
       configDir = "/config";
       runtimeClassName = "nvidia";
+
+      # plex needs extra help finding libcuda
+      env = [
+        {
+          name = "NVIDIA_VISIBLE_DEVICES";
+          value = "all";
+        }
+        {
+          name = "NVIDIA_DRIVER_CAPABILITIES";
+          value = "all";
+        }
+        {
+          name = "LD_LIBRARY_PATH";
+          value = "/usr/local/nvidia/lib64/";
+        }
+      ];
     }
     {
       name = "jellyfin";
