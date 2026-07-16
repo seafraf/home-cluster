@@ -13,107 +13,11 @@ let
   issuerName = "letsencrypt-cloudflare";
 in
 {
-  templates.routeForService = {
-    options = with lib; {
-      serviceName = mkOption {
-        type = lib.types.str;
-      };
-      subdomain = mkOption {
-        type = lib.types.str;
-      };
-      namespace = mkOption {
-        type = lib.types.str;
-      };
-      sectionName = mkOption {
-        type = lib.types.str;
-        default = "https";
-      };
-      port = mkOption {
-        type = lib.types.ints.u16;
-        default = 80;
-      };
-      weight = mkOption {
-        type = lib.types.ints.s32;
-        default = 1;
-      };
-      pathPrefix = mkOption {
-        type = lib.types.str;
-        default = "/";
-      };
-    };
-
-    output =
-      {
-        name,
-        config,
-        ...
-      }:
-      let
-        cfg = config;
-      in
-      {
-        httpRoutes."${name}-${network.gateway}".spec = {
-          hostnames = [ "${cfg.subdomain}.${network.domain}" ];
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = network.gateway;
-              namespace = namespace;
-            }
-          ];
-
-          rules = [
-            {
-              backendRefs = [
-                {
-                  group = "";
-                  kind = "Service";
-                  name = cfg.serviceName;
-                  namespace = cfg.namespace;
-                  port = cfg.port;
-                  weight = cfg.weight;
-                }
-              ];
-              matches = [
-                {
-                  path = {
-                    type = "PathPrefix";
-                    value = cfg.pathPrefix;
-                  };
-                }
-              ];
-            }
-          ];
-        };
-
-        referenceGrants."${name}-${network.gateway}" = {
-          metadata = {
-            name = namespace;
-            namespace = cfg.namespace;
-          };
-          spec = {
-            from = [
-              {
-                group = "gateway.networking.k8s.io";
-                kind = "HTTPRoute";
-                namespace = namespace;
-              }
-            ];
-            to = [
-              {
-                group = "";
-                kind = "Service";
-              }
-            ];
-          };
-        };
-      };
-  };
-
   applications.network = {
     namespace = namespace;
     createNamespace = true;
+
+    extraRawYamls = [ ./sops/network-secrets.enc.yaml ];
 
     resources = {
       # LetsEncrypt key generation for Gateways.  Needs dns01 resolution for wildcard domains
@@ -130,8 +34,8 @@ in
                 dns01 = {
                   cloudflare = {
                     apiTokenSecretRef = {
-                      key = "api-token";
-                      name = "cloudflare-api-token";
+                      key = "cloudflare-api-token";
+                      name = "network-secrets";
                     };
                   };
                 };
@@ -195,24 +99,6 @@ in
           ];
         };
       };
-    };
-
-    templates.routeForService.rancher = {
-      serviceName = "rancher";
-      namespace = "cattle-system";
-      subdomain = "rancher";
-    };
-
-    templates.routeForService.argocd = {
-      serviceName = "argocd-server";
-      namespace = "argocd";
-      subdomain = "argocd";
-    };
-
-    templates.routeForService.test = {
-      serviceName = "caddy";
-      namespace = "auth-system";
-      subdomain = "testing";
     };
   };
 }

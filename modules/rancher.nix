@@ -1,4 +1,10 @@
-{ charts, network, ... }: {
+{
+  charts,
+  network,
+  routes,
+  ...
+}:
+{
   applications.rancher = {
     namespace = "cattle-system";
     createNamespace = true;
@@ -17,5 +23,7 @@
         "1.35.0"
       ];
     };
+
+    templates.route.rancher = routes.rancher;
   };
 }

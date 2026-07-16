@@ -3,6 +3,7 @@
   network,
   storage,
   lib,
+  routes,
   ...
 }:
 let
@@ -38,19 +39,6 @@ in
 
         longhornUI.replicas = 1;
 
-        httproute = {
-          enabled = true;
-          hostnames = [ "longhorn.${network.domain}" ];
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = network.gateway;
-              namespace = network.namespace;
-            }
-          ];
-        };
-
         preUpgradeChecker.jobEnabled = false;
       };
     };
@@ -67,5 +55,7 @@ in
         };
       };
     }) storage;
+
+    templates.route.longhorn = routes.longhorn;
   };
 }

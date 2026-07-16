@@ -3,11 +3,13 @@
   lib,
   network,
   storage,
+  auth,
+  routes,
   ...
 }:
 let
   inherit network storage;
-  namespace = "auth-system";
+  namespace = auth.namespace;
 
   authelia = {
     name = "authelia";
@@ -65,15 +67,46 @@ let
       "app.kubernetes.io/name" = caddy.name;
     };
 
-    port = 80;
+    port = auth.caddy;
   };
+
+  mkRouteBlock =
+    name: cfg:
+    let
+      host = "${cfg.http.subdomain}.${network.domain}";
+      service = "${cfg.service.name}.${cfg.service.namespace}.svc.cluster.local";
+      port = cfg.http.servicePort or 80;
+    in
+    if (cfg.authSubject or null) != null then
+      ''
+        ${host}:80 {
+            forward_auth ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port} {
+                uri /api/authz/forward-auth
+
+                copy_headers \
+                    Remote-User \
+                    Remote-Groups \
+                    Remote-Name \
+                    Remote-Email
+
+                header_up X-Forwarded-Proto https
+                header_up X-Forwarded-Host {host}
+            }
+
+            reverse_proxy ${service}:${toString port}
+        }
+      ''
+    else
+      "";
+
+  routeBlocks = lib.mapAttrsToList mkRouteBlock routes;
 in
 {
   applications.auth = {
     namespace = namespace;
     createNamespace = true;
 
-    extraRawYamls = [ ../sops/auth-secrets.enc.yaml ];
+    extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
 
     resources = {
       ## authelia
@@ -96,7 +129,7 @@ in
             };
           };
 
-          access_control.default_policy = "two_factor";
+          access_control.default_policy = "one_factor";
 
           storage = {
             postgres = {
@@ -432,25 +465,8 @@ in
           {
             auto_https off
           }
-
-          auth.sfdr.me:80 {
-            reverse_proxy ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port}
-          }
-
-          testing.sfdr.me:80 {
-            forward_auth ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port} {
-                uri /api/authz/forward-auth
-
-                copy_headers \
-                    Remote-User \
-                    Remote-Groups \
-                    Remote-Name \
-                    Remote-Email
-            }
-
-            reverse_proxy longhorn-frontend.longhorn-system.svc.cluster.local:80
-          }
-        '';
+        ''
+        + lib.concatStringsSep "\n" routeBlocks;
       };
 
       deployments."${caddy.name}".spec = {
@@ -479,34 +495,31 @@ in
         };
       };
 
-      services."${caddy.name}".spec = {
+      services."${auth.proxyService.name}".spec = {
         selector = caddy.labels;
         ports = [
           {
             name = "http";
-            port = 80;
-            targetPort = 80;
+            port = auth.proxyService.port;
+            targetPort = auth.proxyService.port;
           }
         ];
       };
 
-      ## other
+      ## allow HTTPRoutes in network to access services in auth
       referenceGrants."${namespace}-${network.gateway}" = {
-        metadata = {
-          namespace = network.namespace;
-        };
         spec = {
           from = [
             {
               group = "gateway.networking.k8s.io";
               kind = "HTTPRoute";
-              namespace = namespace;
+              namespace = network.namespace;
             }
           ];
           to = [
             {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
+              group = "";
+              kind = "Service";
             }
           ];
         };

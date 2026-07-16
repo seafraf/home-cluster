@@ -44,6 +44,14 @@
           domain = "${network.sld}.${network.tld}";
         };
 
+        auth = {
+          namespace = "auth-system"; # needs to match modules/sops/auth-secrets.enc.yaml
+          proxyService = {
+            name = "caddy";
+            port = 80;
+          };
+        };
+
         # key is disk tag, value is StorageClass name
         # all storage classes match any node for now
         storage = {
@@ -51,6 +59,8 @@
           ssd = "longhorn-ssd";
           hdd = "longhorn-hdd";
         };
+
+        routes = import ./routes.nix { };
 
         crds = builtins.mapAttrs (
           _: path:
@@ -74,12 +84,28 @@
 
               {
                 _module.args = {
-                  inherit crds network storage;
+                  inherit
+                    crds
+                    network
+                    storage
+                    routes
+                    auth
+                    ;
                 };
+              }
+
+              {
+                imports = [
+                  (import ./templates/route.nix {
+                    inherit network auth;
+                    lib = pkgs.lib;
+                  })
+                ];
               }
 
               ./configuration.nix
               ./modules/rancher.nix
+              ./modules/argocd.nix
               ./modules/cert-manager.nix
               ./modules/network.nix
               ./modules/longhorn.nix
