@@ -95,6 +95,7 @@ in
     extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
 
     templates.route.authelia = routes.authelia;
+    templates.route.lldap = routes.lldap;
 
     resources = {
       ## authelia
@@ -117,7 +118,26 @@ in
             };
           };
 
-          access_control.default_policy = "one_factor";
+          access_control = {
+            default_policy = "deny";
+            rules = lib.pipe routes [
+              (lib.filterAttrs (
+                name: value:
+                value ? http && value.http ? subdomain && value ? authSubject && value.authSubject != null
+              ))
+              (lib.mapAttrsToList (
+                name: value:
+                let
+                  domain = if value.http ? domain then value.http.domain else network.domain;
+                in
+                {
+                  domain = "${value.http.subdomain}.${domain}";
+                  policy = "one_factor";
+                  subject = value.authSubject;
+                }
+              ))
+            ];
+          };
 
           storage = {
             postgres = {
