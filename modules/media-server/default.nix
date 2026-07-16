@@ -4,13 +4,12 @@
   options,
   network,
   storage,
+  namespaces,
   ...
 }:
 let
   inherit network storage;
-
-  namespace = "media-server";
-
+  
   mediaAppFiles = [
     ./apps/plex.nix
     ./apps/jellyfin.nix
@@ -140,7 +139,7 @@ in
               group = "gateway.networking.k8s.io";
               kind = "Gateway";
               name = network.gateway;
-              namespace = network.namespace;
+              namespace = namespaces.network;
             }
           ];
 
@@ -151,7 +150,7 @@ in
                   group = "";
                   kind = "Service";
                   name = cfg.name;
-                  namespace = namespace;
+                  namespace = namespaces.mediaServer;
                   port = cfg.port;
                   weight = 1;
                 }
@@ -171,23 +170,23 @@ in
   };
 
   applications.media-server = {
-    namespace = namespace;
+    namespace = namespaces.mediaServer;
     createNamespace = true;
 
     extraRawYamls = [ ./sops/media-server-secrets.enc.yaml ];
 
     resources = {
       # Grant HTTPRoutes in this namespace to access the Gateway in the network namespace
-      referenceGrants."${namespace}-${network.gateway}" = {
+      referenceGrants."${namespaces.mediaServer}-${network.gateway}" = {
         metadata = {
-          namespace = network.namespace;
+          namespace = namespaces.network;
         };
         spec = {
           from = [
             {
               group = "gateway.networking.k8s.io";
               kind = "HTTPRoute";
-              namespace = namespace;
+              namespace = namespaces.mediaServer;
             }
           ];
           to = [
@@ -213,7 +212,7 @@ in
           })
           (
             import ./volumes.nix {
-              inherit namespace storage;
+              inherit namespaces storage;
 
               # these values are not relevant for the PVCs, only mounting
               appName = "dummy";
@@ -226,7 +225,7 @@ in
       lib.imap0 (
         i: file:
         let
-          app = import file { inherit namespace network storage; };
+          app = import file { inherit namespaces network storage; };
         in
         {
           name = app.name;

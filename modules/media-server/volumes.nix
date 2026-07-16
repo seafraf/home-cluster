@@ -1,5 +1,5 @@
 {
-  namespace,
+  namespaces,
   configDir,
   appName,
   storage,
@@ -7,7 +7,7 @@
 {
   # Used for all settings stored by all applications. Some applications store quite a bit of metadata so this needs to be rather large
   config = {
-    name = "${namespace}-config";
+    name = "${namespaces.mediaServer}-config";
     size = "128Gi";
     mountPath = configDir;
     volumePath = appName;
@@ -16,7 +16,7 @@
 
   # Cached transcoded media. This should be fast, but does not require to be very large
   transcode = {
-    name = "${namespace}-transcode";
+    name = "${namespaces.mediaServer}-transcode";
     size = "256Gi";
     mountPath = "/media/transcode";
     volumePath = appName;
@@ -25,28 +25,28 @@
 
   # Used by download clients before the media is fully downloaded and imported into one of the below media mounts
   download = {
-    name = "${namespace}-download";
+    name = "${namespaces.mediaServer}-download";
     size = "256Gi";
     mountPath = "/media/download/${appName}";
     class = storage.hdd;
   };
 
   anime = {
-    name = "${namespace}-anime";
+    name = "${namespaces.mediaServer}-anime";
     size = "2Ti";
     mountPath = "/media/anime";
     class = storage.hdd;
   };
 
   series = {
-    name = "${namespace}-series";
+    name = "${namespaces.mediaServer}-series";
     size = "5Ti";
     mountPath = "/media/series";
     class = storage.hdd;
   };
 
   movies = {
-    name = "${namespace}-movies";
+    name = "${namespaces.mediaServer}-movies";
     size = "3Ti";
     mountPath = "/media/movies";
     class = storage.hdd;

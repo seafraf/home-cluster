@@ -1,5 +1,5 @@
 {
-  namespace,
+  namespaces,
   network,
   storage,
   ...
@@ -10,7 +10,7 @@ let
 
   volumes = import ../volumes.nix {
     inherit
-      namespace
+      namespaces
       storage
       appName
       configDir

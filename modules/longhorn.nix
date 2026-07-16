@@ -4,16 +4,12 @@
   storage,
   lib,
   routes,
+  namespaces,
   ...
 }:
-let
-  inherit network storage lib;
-
-  namespace = "longhorn-system";
-in
 {
   applications.longhorn = {
-    namespace = namespace;
+    namespace = namespaces.longhorn;
     createNamespace = true;
 
     helm.releases.longhorn = {

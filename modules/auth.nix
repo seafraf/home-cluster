@@ -5,11 +5,11 @@
   storage,
   auth,
   routes,
+  namespaces,
   ...
 }:
 let
   inherit network storage;
-  namespace = auth.namespace;
 
   authelia = {
     name = "authelia";
@@ -80,7 +80,7 @@ let
     if (cfg.authSubject or null) != null then
       ''
         ${host}:80 {
-            forward_auth ${authelia.name}.${namespace}.svc.cluster.local:${toString authelia.port} {
+            forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString authelia.port} {
                 uri /api/authz/forward-auth
 
                 copy_headers \
@@ -103,7 +103,7 @@ let
 in
 {
   applications.auth = {
-    namespace = namespace;
+    namespace = namespaces.auth;
     createNamespace = true;
 
     extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
@@ -120,7 +120,7 @@ in
             refresh_interval = "disable";
 
             ldap = {
-              address = "ldap://${lldap.name}.${namespace}.svc.cluster.local:${toString lldap.ldapPort}";
+              address = "ldap://${lldap.name}.${namespaces.auth}.svc.cluster.local:${toString lldap.ldapPort}";
               implementation = "lldap";
 
               base_dn = lldap.baseDn;
@@ -133,7 +133,7 @@ in
 
           storage = {
             postgres = {
-              address = "tcp://${postgres.name}.${namespace}.svc.cluster.local";
+              address = "tcp://${postgres.name}.${namespaces.auth}.svc.cluster.local";
               database = postgres.autheliaDatabase;
               username = "postgres";
             };
@@ -259,7 +259,7 @@ in
             group = "gateway.networking.k8s.io";
             kind = "Gateway";
             name = network.gateway;
-            namespace = network.namespace;
+            namespace = namespaces.network;
           }
         ];
 
@@ -270,7 +270,7 @@ in
                 group = "";
                 kind = "Service";
                 name = authelia.name;
-                namespace = namespace;
+                namespace = namespaces.auth;
                 port = authelia.port;
                 weight = 1;
               }
@@ -374,7 +374,7 @@ in
             group = "gateway.networking.k8s.io";
             kind = "Gateway";
             name = network.gateway;
-            namespace = network.namespace;
+            namespace = namespaces.network;
           }
         ];
 
@@ -385,7 +385,7 @@ in
                 group = "";
                 kind = "Service";
                 name = lldap.name;
-                namespace = namespace;
+                namespace = namespaces.auth;
                 port = lldap.webPort;
                 weight = 1;
               }
@@ -507,13 +507,13 @@ in
       };
 
       ## allow HTTPRoutes in network to access services in auth
-      referenceGrants."${namespace}-${network.gateway}" = {
+      referenceGrants."${namespaces.auth}-${network.gateway}" = {
         spec = {
           from = [
             {
               group = "gateway.networking.k8s.io";
               kind = "HTTPRoute";
-              namespace = network.namespace;
+              namespace = namespaces.network;
             }
           ];
           to = [

@@ -1,6 +1,6 @@
-{ charts, ... }: {
+{ charts, namespaces, ... }: {
   applications.cert-manager = {
-    namespace = "cert-manager";
+    namespace = namespaces.certManager;
     createNamespace = true;
 
     helm.releases.cert-manager = {

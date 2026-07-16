@@ -4,17 +4,16 @@
   generators,
   lib,
   network,
+  namespaces,
   ...
 }:
 let
   inherit network;
-
-  namespace = network.namespace;
   issuerName = "letsencrypt-cloudflare";
 in
 {
   applications.network = {
-    namespace = namespace;
+    namespace = namespaces.network;
     createNamespace = true;
 
     extraRawYamls = [ ./sops/network-secrets.enc.yaml ];

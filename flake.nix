@@ -40,12 +40,10 @@
           sld = "sfdr";
           tld = "me";
           gateway = "${network.sld}-${network.tld}";
-          namespace = "network";
           domain = "${network.sld}.${network.tld}";
         };
 
         auth = {
-          namespace = "auth-system"; # needs to match modules/sops/auth-secrets.enc.yaml
           proxyService = {
             name = "caddy";
             port = 80;
@@ -60,7 +58,8 @@
           hdd = "longhorn-hdd";
         };
 
-        routes = import ./routes.nix { };
+        namespaces = import ./namespaces.nix { };
+        routes = import ./routes.nix { inherit namespaces; };
 
         crds = builtins.mapAttrs (
           _: path:
@@ -90,6 +89,7 @@
                     storage
                     routes
                     auth
+                    namespaces
                     ;
                 };
               }
@@ -97,7 +97,7 @@
               {
                 imports = [
                   (import ./templates/route.nix {
-                    inherit network auth;
+                    inherit network auth namespaces;
                     lib = pkgs.lib;
                   })
                 ];

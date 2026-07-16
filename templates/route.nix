@@ -2,6 +2,7 @@
   lib,
   network,
   auth,
+  namespaces,
 }:
 {
   templates.route = {
@@ -42,7 +43,7 @@
                 };
                 gatewayNamespace = lib.mkOption {
                   type = lib.types.str;
-                  default = network.namespace;
+                  default = namespaces.network;
                 };
                 servicePort = lib.mkOption {
                   type = lib.types.ints.u32;
@@ -126,7 +127,7 @@
                           group = "";
                           kind = "Service";
                           name = auth.proxyService.name;
-                          namespace = auth.namespace;
+                          namespace = namespaces.auth;
                           port = auth.proxyService.port;
                           weight = 1;
                         }

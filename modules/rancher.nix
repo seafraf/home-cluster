@@ -2,11 +2,12 @@
   charts,
   network,
   routes,
+  namespaces,
   ...
 }:
 {
   applications.rancher = {
-    namespace = "cattle-system";
+    namespace = namespaces.rancher;
     createNamespace = true;
 
     helm.releases.rancher = {
