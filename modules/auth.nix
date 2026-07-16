@@ -4,7 +4,7 @@
   network,
   storage,
   auth,
-  routes,
+  apps,
   namespaces,
   ...
 }:
@@ -66,7 +66,7 @@ let
     if (cfg.authSubject or null) != null then
       ''
         ${host}:80 {
-            forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString routes.authelia.ports.http} {
+            forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString apps.authelia.ports.http} {
                 uri /api/authz/forward-auth
 
                 copy_headers \
@@ -85,7 +85,7 @@ let
     else
       "";
 
-  routeBlocks = lib.mapAttrsToList mkRouteBlock routes;
+  routeBlocks = lib.mapAttrsToList mkRouteBlock apps;
 in
 {
   applications.auth = {
@@ -94,8 +94,8 @@ in
 
     extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
 
-    templates.route.authelia = routes.authelia;
-    templates.route.lldap = routes.lldap;
+    templates.app.authelia = apps.authelia;
+    templates.app.lldap = apps.lldap;
 
     resources = {
       ## authelia
@@ -109,7 +109,7 @@ in
             refresh_interval = "disable";
 
             ldap = {
-              address = "ldap://${routes.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString routes.lldap.ports.ldap}";
+              address = "ldap://${apps.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString apps.lldap.ports.ldap}";
               implementation = "lldap";
 
               base_dn = lldap.baseDn;
@@ -120,7 +120,7 @@ in
 
           access_control = {
             default_policy = "deny";
-            rules = lib.pipe routes [
+            rules = lib.pipe apps [
               (lib.filterAttrs (
                 name: value:
                 value ? http && value.http ? subdomain && value ? authSubject && value.authSubject != null
@@ -150,7 +150,7 @@ in
           session.cookies = [
             {
               domain = network.domain;
-              authelia_url = "https://${routes.authelia.http.subdomain}.${network.domain}";
+              authelia_url = "https://${apps.authelia.http.subdomain}.${network.domain}";
             }
           ];
 
@@ -164,9 +164,9 @@ in
 
       deployments."${authelia.name}".spec = {
         replicas = 1;
-        selector.matchLabels = routes.authelia.labels;
+        selector.matchLabels = apps.authelia.labels;
         template = {
-          metadata.labels = routes.authelia.labels;
+          metadata.labels = apps.authelia.labels;
           spec = {
             enableServiceLinks = false;
             containers.authelia = {
@@ -252,9 +252,9 @@ in
       ## lldap
       deployments."${lldap.name}".spec = {
         replicas = 1;
-        selector.matchLabels = routes.lldap.labels;
+        selector.matchLabels = apps.lldap.labels;
         template = {
-          metadata.labels = routes.lldap.labels;
+          metadata.labels = apps.lldap.labels;
           spec = {
             containers.lldap = {
               image = lldap.image;

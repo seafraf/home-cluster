@@ -3,7 +3,7 @@
   network,
   storage,
   lib,
-  routes,
+  apps,
   namespaces,
   ...
 }:
@@ -52,6 +52,6 @@
       };
     }) storage;
 
-    templates.route.longhorn = routes.longhorn;
+    templates.app.longhorn = apps.longhorn;
   };
 }

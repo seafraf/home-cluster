@@ -1,7 +1,7 @@
 {
   charts,
   network,
-  routes,
+  apps,
   namespaces,
   ...
 }:
@@ -25,6 +25,6 @@
       ];
     };
 
-    templates.route.rancher = routes.rancher;
+    templates.app.rancher = apps.rancher;
   };
 }

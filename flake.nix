@@ -59,7 +59,7 @@
         };
 
         namespaces = import ./namespaces.nix { };
-        routes = import ./routes.nix { inherit namespaces; };
+        apps = import ./apps.nix { inherit namespaces; };
 
         crds = builtins.mapAttrs (
           _: path:
@@ -87,7 +87,7 @@
                     crds
                     network
                     storage
-                    routes
+                    apps
                     auth
                     namespaces
                     ;
@@ -96,7 +96,7 @@
 
               {
                 imports = [
-                  (import ./templates/route.nix {
+                  (import ./templates/app.nix {
                     inherit network auth namespaces;
                     lib = pkgs.lib;
                   })

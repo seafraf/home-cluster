@@ -1,9 +1,9 @@
 {
   lib,
   network,
-  routes,
+  apps,
   ...
 }:
 {
-  applications.argocd.templates.route.argocd = routes.argocd;
+  applications.argocd.templates.app.argocd = apps.argocd;
 }

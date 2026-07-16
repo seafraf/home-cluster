@@ -5,7 +5,7 @@
   namespaces,
 }:
 {
-  templates.route = {
+  templates.app = {
     options =
       with lib;
       with network;
