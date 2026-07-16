@@ -10,6 +10,12 @@
       with lib;
       with network;
       {
+        labels = lib.mkOption {
+          default = { };
+        };
+        ports = lib.mkOption {
+          default = { };
+        };
         service = lib.mkOption {
           type = types.submodule {
             options = {

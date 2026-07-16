@@ -14,16 +14,10 @@ let
   authelia = {
     name = "authelia";
     image = "authelia/authelia:4.39";
-    labels = {
-      "app.kubernetes.io/name" = authelia.name;
-    };
 
     configMountPath = "/config";
     configName = "config";
     configEntryName = "configuration.yml";
-
-    subdomain = "auth";
-    port = 9091;
   };
 
   postgres = {
@@ -45,17 +39,9 @@ let
   lldap = {
     name = "lldap";
     image = "lldap/lldap:stable";
-    labels = {
-      "app.kubernetes.io/name" = lldap.name;
-    };
 
     claimName = "${lldap.name}-data";
     claimSize = "2Gi";
-
-    subdomain = "ldap";
-    webPort = 17170;
-    ldapPort = 3890;
-    ldapsPort = 6360;
 
     baseDn = "DC=${network.sld},DC=${network.tld}";
   };
@@ -80,7 +66,7 @@ let
     if (cfg.authSubject or null) != null then
       ''
         ${host}:80 {
-            forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString authelia.port} {
+            forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString routes.authelia.ports.http} {
                 uri /api/authz/forward-auth
 
                 copy_headers \
@@ -108,6 +94,8 @@ in
 
     extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
 
+    templates.route.authelia = routes.authelia;
+
     resources = {
       ## authelia
       configMaps."${authelia.configName}" = {
@@ -120,7 +108,7 @@ in
             refresh_interval = "disable";
 
             ldap = {
-              address = "ldap://${lldap.name}.${namespaces.auth}.svc.cluster.local:${toString lldap.ldapPort}";
+              address = "ldap://${routes.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString routes.lldap.ports.ldap}";
               implementation = "lldap";
 
               base_dn = lldap.baseDn;
@@ -142,7 +130,7 @@ in
           session.cookies = [
             {
               domain = network.domain;
-              authelia_url = "https://${authelia.subdomain}.${network.domain}";
+              authelia_url = "https://${routes.authelia.http.subdomain}.${network.domain}";
             }
           ];
 
@@ -156,9 +144,9 @@ in
 
       deployments."${authelia.name}".spec = {
         replicas = 1;
-        selector.matchLabels = authelia.labels;
+        selector.matchLabels = routes.authelia.labels;
         template = {
-          metadata.labels = authelia.labels;
+          metadata.labels = routes.authelia.labels;
           spec = {
             enableServiceLinks = false;
             containers.authelia = {
@@ -241,58 +229,12 @@ in
         };
       };
 
-      services."${authelia.name}".spec = {
-        selector = authelia.labels;
-        ports = [
-          {
-            name = "http";
-            port = authelia.port;
-            targetPort = authelia.port;
-          }
-        ];
-      };
-
-      httpRoutes."${authelia.subdomain}-${network.gateway}".spec = {
-        hostnames = [ "${authelia.subdomain}.${network.domain}" ];
-        parentRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "Gateway";
-            name = network.gateway;
-            namespace = namespaces.network;
-          }
-        ];
-
-        rules = [
-          {
-            backendRefs = [
-              {
-                group = "";
-                kind = "Service";
-                name = authelia.name;
-                namespace = namespaces.auth;
-                port = authelia.port;
-                weight = 1;
-              }
-            ];
-            matches = [
-              {
-                path = {
-                  type = "PathPrefix";
-                  value = "/";
-                };
-              }
-            ];
-          }
-        ];
-      };
-
       ## lldap
       deployments."${lldap.name}".spec = {
         replicas = 1;
-        selector.matchLabels = lldap.labels;
+        selector.matchLabels = routes.lldap.labels;
         template = {
-          metadata.labels = lldap.labels;
+          metadata.labels = routes.lldap.labels;
           spec = {
             containers.lldap = {
               image = lldap.image;
@@ -344,62 +286,6 @@ in
         accessModes = [ "ReadWriteOnce" ];
         resources.requests.storage = lldap.claimSize;
         storageClassName = storage.ssd;
-      };
-
-      services."${lldap.name}".spec = {
-        selector = lldap.labels;
-        ports = [
-          {
-            name = "http";
-            port = lldap.webPort;
-            targetPort = lldap.webPort;
-          }
-          {
-            name = "ldap";
-            port = lldap.ldapPort;
-            targetPort = lldap.ldapPort;
-          }
-          {
-            name = "ldaps";
-            port = lldap.ldapsPort;
-            targetPort = lldap.ldapsPort;
-          }
-        ];
-      };
-
-      httpRoutes."${lldap.subdomain}-${network.gateway}".spec = {
-        hostnames = [ "${lldap.subdomain}.${network.domain}" ];
-        parentRefs = [
-          {
-            group = "gateway.networking.k8s.io";
-            kind = "Gateway";
-            name = network.gateway;
-            namespace = namespaces.network;
-          }
-        ];
-
-        rules = [
-          {
-            backendRefs = [
-              {
-                group = "";
-                kind = "Service";
-                name = lldap.name;
-                namespace = namespaces.auth;
-                port = lldap.webPort;
-                weight = 1;
-              }
-            ];
-            matches = [
-              {
-                path = {
-                  type = "PathPrefix";
-                  value = "/";
-                };
-              }
-            ];
-          }
-        ];
       };
 
       ## postgres
