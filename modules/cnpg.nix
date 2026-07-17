@@ -27,6 +27,7 @@
       ) (builtins.attrValues db);
 
     resources.cnpgClusters = lib.mapAttrs (_: cluster: {
+      metadata.namespace = cluster.namespace;
       spec = {
         instances = cluster.instances;
         storage.size = cluster.size;
@@ -48,10 +49,13 @@
         cluster:
         lib.mapAttrsToList (db: db: {
           name = "${cluster.name}-${db.name}";
-          value.spec = {
-            name = db.name;
-            owner = db.user;
-            cluster.name = cluster.name;
+          value = {
+            metadata.namespace = cluster.namespace;
+            spec = {
+              name = db.name;
+              owner = db.user;
+              cluster.name = cluster.name;
+            };
           };
         }) cluster.dbs
       ) (builtins.attrValues db)

@@ -1,4 +1,6 @@
-{ }:
+{
+  namespaces,
+}:
 let
   unfirmDatabase = name: {
     name = name;
@@ -7,8 +9,7 @@ let
   };
 in
 {
-  # cluster name
-  default = {
+  auth = {
     # a sop secret under sops/db/<cluster name>/<user name> should exist
     # containing username and password fields
     dbs = {
@@ -16,7 +17,8 @@ in
     };
 
     instances = 1;
-    name = "default";
+    namespace = namespaces.auth;
+    name = "auth";
     size = "10Gi";
   };
 }

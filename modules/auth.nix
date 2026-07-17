@@ -120,9 +120,9 @@ let
 
     storage = {
       postgres = {
-        address = "tcp://${db.default.name}-rw.${namespaces.database}.svc.cluster.local";
-        database = db.default.dbs.authelia.name;
-        username = db.default.dbs.authelia.user;
+        address = "tcp://${db.auth.name}-rw.${db.auth.namespace}.svc.cluster.local";
+        database = db.auth.dbs.authelia.name;
+        username = db.auth.dbs.authelia.user;
       };
     };
 
@@ -251,7 +251,7 @@ in
               {
                 name = "db-secret";
                 secret = {
-                  secretName = db.default.dbs.authelia.secret;
+                  secretName = db.auth.dbs.authelia.secret;
                   items = [
                     {
                       key = "password";

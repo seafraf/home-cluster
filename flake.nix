@@ -62,7 +62,7 @@
         namespaces = import ./registry/namespaces.nix { };
         groups = import ./registry/groups.nix { };
         apps = import ./registry/apps.nix { inherit namespaces groups; };
-        db = import ./registry/db.nix { };
+        db = import ./registry/db.nix { inherit namespaces; };
 
         crds = builtins.mapAttrs (
           _: path:
