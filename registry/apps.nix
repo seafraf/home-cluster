@@ -216,9 +216,9 @@ in
     authSubject = [ groups.mediaAdmin ];
   };
 
-  seer = externalHttpApp {
+  seerr = externalHttpApp {
     namespace = namespaces.mediaServer;
-    name = "seer";
+    name = "seerr";
     subdomain = "request";
     port = 5055;
   };

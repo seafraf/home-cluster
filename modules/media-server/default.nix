@@ -21,7 +21,7 @@ let
 
     sonarr = ./apps/sonarr.nix;
     radarr = ./apps/radarr.nix;
-    seer = ./apps/seer.nix;
+    seerr = ./apps/seerr.nix;
     prowlarr = ./apps/prowlarr.nix;
   };
 
