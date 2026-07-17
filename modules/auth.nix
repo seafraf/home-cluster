@@ -372,7 +372,7 @@ in
             auto_https off
           }
         ''
-        + lib.concatStringsSep "\n" routeBlocks;
+        + lib.concatStrings routeBlocks;
       };
 
       deployments."${caddy.name}".spec = {

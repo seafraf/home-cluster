@@ -6,9 +6,10 @@ let
       name,
       port,
       subdomain ? name,
+      authSubject ? null,
     }:
     rec {
-      inherit name;
+      inherit name authSubject;
       ports = {
         http = port;
       };
@@ -124,6 +125,7 @@ in
     name = "decypharr";
     subdomain = "dl";
     port = 8282;
+    authSubject = [ groups.mediaAdmin ];
   };
 
   transmission = externalHttpApp {
@@ -131,18 +133,21 @@ in
     name = "transmission";
     subdomain = "tx";
     port = 9091;
+    authSubject = [ groups.mediaAdmin ];
   };
 
   sonarr = externalHttpApp {
     namespace = namespaces.mediaServer;
     name = "sonarr";
     port = 8989;
+    authSubject = [ groups.mediaAdmin ];
   };
 
   radarr = externalHttpApp {
     namespace = namespaces.mediaServer;
     name = "radarr";
     port = 7878;
+    authSubject = [ groups.mediaAdmin ];
   };
 
   seer = externalHttpApp {
@@ -156,5 +161,6 @@ in
     namespace = namespaces.mediaServer;
     name = "prowlarr";
     port = 9696;
+    authSubject = [ groups.mediaAdmin ];
   };
 }
