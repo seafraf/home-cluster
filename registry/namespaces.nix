@@ -7,4 +7,5 @@
   longhorn = "longhorn-system";
   network = "network";
   mediaServer = "media-server";
+  database = "database";
 }

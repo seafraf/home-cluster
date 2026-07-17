@@ -34,6 +34,7 @@
           helmCattleCrd = ./crds/helm-cattle.nix;
           ciliumCrd = ./crds/cilium.nix;
           certManagerCrd = ./crds/cert-manager.nix;
+          cnpgCrd = ./crds/cnpg.nix;
         };
 
         network = {
@@ -61,6 +62,7 @@
         namespaces = import ./registry/namespaces.nix { };
         groups = import ./registry/groups.nix { };
         apps = import ./registry/apps.nix { inherit namespaces groups; };
+        db = import ./registry/db.nix { };
 
         crds = builtins.mapAttrs (
           _: path:
@@ -92,6 +94,7 @@
                     auth
                     namespaces
                     groups
+                    db
                     ;
                 };
               }
@@ -113,6 +116,7 @@
               ./modules/longhorn.nix
               ./modules/media-server
               ./modules/auth.nix
+              ./modules/cnpg.nix
             ];
           };
         };

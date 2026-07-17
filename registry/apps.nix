@@ -108,6 +108,29 @@ in
     };
   };
 
+  postgres = rec {
+    ports = {
+      postgres = 5432;
+    };
+    labels = {
+      "app.kubernetes.io/name" = "postgres";
+    };
+    service = {
+      name = "postgres";
+      namespace = namespaces.database;
+      spec = {
+        selector = labels;
+        ports = [
+          {
+            name = "postgres";
+            port = ports.postgres;
+            targetPort = ports.postgres;
+          }
+        ];
+      };
+    };
+  };
+
   plex = externalHttpApp {
     namespace = namespaces.mediaServer;
     name = "plex";
