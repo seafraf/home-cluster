@@ -17,7 +17,7 @@ let
   };
 in
 {
-  image = "linuxserver/jellyfin:10.11.11";
+  image = "cy01/blackhole:v2.3";
   configDir = configDir;
   volumes = [
     volumes.config
