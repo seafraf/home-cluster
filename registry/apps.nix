@@ -82,17 +82,19 @@ in
   };
 
   lldap = rec {
+    name = "lldap";
+
     ports = {
       http = 17170;
       ldap = 3890;
       ldaps = 6360;
     };
     labels = {
-      "app.kubernetes.io/name" = "lldap";
+      "app.kubernetes.io/name" = name;
     };
     services = [
       {
-        name = "lldap";
+        name = name;
         namespace = namespaces.auth;
         spec = {
           selector = labels;
@@ -118,18 +120,65 @@ in
     ];
     http = {
       servicePort = ports.http;
-      serviceName = "longhorn-frontend";
+      serviceName = name;
       serviceNamespace = namespaces.auth;
 
       subdomain = "ldap";
     };
   };
 
-  plex = externalHttpApp {
-    namespace = namespaces.mediaServer;
-    name = "plex";
-    port = 32400;
-  };
+  plex =
+    let
+      namespace = namespaces.mediaServer;
+    in
+    rec {
+      name = "plex";
+      ports = {
+        http = 32400;
+      };
+      labels = {
+        "app.kubernetes.io/name" = name;
+      };
+      services = [
+        {
+          inherit name namespace;
+          spec = {
+            selector = labels;
+            ports = [
+              {
+                name = "http";
+                port = ports.http;
+                targetPort = ports.http;
+              }
+            ];
+          };
+        }
+        {
+          inherit namespace;
+          name = "${name}-lb";
+          annotations."io.cilium/lb-ipam-ips" = "192.168.1.151";
+
+          spec = {
+            selector = labels;
+            type = "LoadBalancer";
+            ports = [
+              {
+                name = "http";
+                port = ports.http;
+                targetPort = ports.http;
+              }
+            ];
+          };
+        }
+      ];
+      http = {
+        servicePort = ports.http;
+        serviceName = name;
+        serviceNamespace = namespace;
+
+        subdomain = name;
+      };
+    };
 
   jellyfin = externalHttpApp {
     namespace = namespaces.mediaServer;

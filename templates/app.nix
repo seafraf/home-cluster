@@ -26,12 +26,12 @@
                 name = lib.mkOption {
                   type = types.str;
                 };
+                namespace = lib.mkOption {
+                  type = types.str;
+                };
                 annotations = lib.mkOption {
                   type = types.attrsOf types.str;
                   default = { };
-                };
-                namespace = lib.mkOption {
-                  type = types.str;
                 };
                 spec = lib.mkOption {
                   type = types.nullOr types.anything;
