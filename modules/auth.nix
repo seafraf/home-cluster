@@ -25,9 +25,6 @@ let
     name = "lldap";
     image = "lldap/lldap:stable";
 
-    claimName = "${lldap.name}-data";
-    claimSize = "2Gi";
-
     baseDn = "DC=${network.sld},DC=${network.tld}";
   };
 
@@ -275,14 +272,9 @@ in
             annotations."meta.secrets.hash" = secretConfigHash;
           };
           spec = {
+            enableServiceLinks = false;
             containers.lldap = {
               image = lldap.image;
-              volumeMounts = [
-                {
-                  name = lldap.claimName;
-                  mountPath = "/data";
-                }
-              ];
               env = [
                 {
                   name = "LLDAP_JWT_SECRET";
@@ -309,22 +301,35 @@ in
                     key = "LDAP_PASSWORD";
                   };
                 }
+                {
+                  name = "POSTGRES_PASSWORD";
+                  valueFrom.secretKeyRef = {
+                    name = db.auth.dbs.authelia.secret;
+                    key = "password";
+                  };
+                }
+                {
+                  name = "LLDAP_DATABASE_URL";
+                  value = "postgres://${db.auth.dbs.authelia.user}:$(POSTGRES_PASSWORD)@${db.auth.name}-rw.${db.auth.namespace}.svc.cluster.local/${db.auth.dbs.authelia.name}";
+                }
               ];
             };
             volumes = [
               {
-                name = lldap.claimName;
-                persistentVolumeClaim.claimName = lldap.claimName;
+                name = "db-secret";
+                secret = {
+                  secretName = db.auth.dbs.authelia.secret;
+                  items = [
+                    {
+                      key = "password";
+                      path = "POSTGRES_PASSWORD";
+                    }
+                  ];
+                };
               }
             ];
           };
         };
-      };
-
-      persistentVolumeClaims."${lldap.claimName}".spec = {
-        accessModes = [ "ReadWriteOnce" ];
-        resources.requests.storage = lldap.claimSize;
-        storageClassName = storage.ssd;
       };
 
       ## caddy
@@ -370,25 +375,6 @@ in
             targetPort = auth.proxyService.port;
           }
         ];
-      };
-
-      ## allow HTTPRoutes in network to access services in auth
-      referenceGrants."${namespaces.auth}-${network.gateway}" = {
-        spec = {
-          from = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "HTTPRoute";
-              namespace = namespaces.network;
-            }
-          ];
-          to = [
-            {
-              group = "";
-              kind = "Service";
-            }
-          ];
-        };
       };
     };
   };

@@ -149,6 +149,7 @@
           };
         })
 
+        # this results in merges that put more than one from entry sometimes.. but it doesn't cause issues
         (lib.mkIf
           (cfg.http != null && cfg.http.gatewayNamespace != cfg.service.namespace && cfg.authSubject == null)
           {
