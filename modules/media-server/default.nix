@@ -6,6 +6,7 @@
   namespaces,
   auth,
   apps,
+  db,
   ...
 }:
 let
@@ -180,6 +181,7 @@ in
             network
             storage
             app
+            db
             ;
         };
       in

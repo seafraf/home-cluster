@@ -24,7 +24,7 @@ in
 
   mediaServer = {
     dbs = {
-      # sonarr = unfirmDatabase "sonarr";
+      sonarr = unfirmDatabase "sonarr";
       # radarr = unfirmDatabase "radarr";
       # prowlarr = unfirmDatabase "prowlarr";
       # sonarr = unfirmDatabase "sonarr";
