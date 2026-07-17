@@ -32,6 +32,9 @@ let
       namespaces
       ;
   };
+
+  secretsFile = ./sops/media-server-secrets.enc.yaml;
+  secretConfigHash = builtins.hashFile "sha256" secretsFile;
 in
 {
   templates.mediaApplication = {
@@ -133,7 +136,7 @@ in
     namespace = namespaces.mediaServer;
     createNamespace = true;
 
-    extraRawYamls = [ ./sops/media-server-secrets.enc.yaml ];
+    extraRawYamls = [ secretsFile ];
 
     resources = {
       persistentVolumeClaims =

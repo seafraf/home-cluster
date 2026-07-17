@@ -86,13 +86,86 @@ let
       "";
 
   routeBlocks = lib.mapAttrsToList mkRouteBlock apps;
+
+  caddyConfig = ''
+    {
+      auto_https off
+    }
+  ''
+  + lib.concatStrings routeBlocks;
+
+  autheliaConfig = builtins.toJSON {
+    theme = "auto";
+
+    authentication_backend = {
+      password_reset.disable = true;
+      password_change.disable = true;
+      refresh_interval = "disable";
+
+      ldap = {
+        address = "ldap://${apps.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString apps.lldap.ports.ldap}";
+        implementation = "lldap";
+
+        base_dn = lldap.baseDn;
+
+        user = "UID=admin,OU=people,DC=${network.sld},DC=${network.tld}";
+      };
+    };
+
+    access_control = {
+      default_policy = "deny";
+      rules = lib.pipe apps [
+        (lib.filterAttrs (
+          name: value:
+          value ? http && value.http ? subdomain && value ? authSubject && value.authSubject != null
+        ))
+        (lib.mapAttrsToList (
+          name: value:
+          let
+            domain = if value.http ? domain then value.http.domain else network.domain;
+          in
+          {
+            domain = "${value.http.subdomain}.${domain}";
+            policy = "one_factor";
+            subject = value.authSubject;
+          }
+        ))
+      ];
+    };
+
+    storage = {
+      postgres = {
+        address = "tcp://${postgres.name}.${namespaces.auth}.svc.cluster.local";
+        database = postgres.autheliaDatabase;
+        username = "postgres";
+      };
+    };
+
+    session.cookies = [
+      {
+        domain = network.domain;
+        authelia_url = "https://${apps.authelia.http.subdomain}.${network.domain}";
+      }
+    ];
+
+    # todo: smtp
+    notifier = {
+      disable_startup_check = true;
+      filesystem.filename = "/tmp/notification.txt";
+    };
+  };
+
+  secretsFile = ./sops/auth-secrets.enc.yaml;
+  autheliaConfigHash = builtins.hashString "sha256" autheliaConfig;
+  caddyConfigHash = builtins.hashString "sha256" caddyConfig;
+  secretConfigHash = builtins.hashFile "sha256" secretsFile;
 in
 {
   applications.auth = {
     namespace = namespaces.auth;
     createNamespace = true;
 
-    extraRawYamls = [ ./sops/auth-secrets.enc.yaml ];
+    extraRawYamls = [ secretsFile ];
 
     templates.app.authelia = apps.authelia;
     templates.app.lldap = apps.lldap;
@@ -100,73 +173,18 @@ in
     resources = {
       ## authelia
       configMaps."${authelia.configName}" = {
-        data."${authelia.configEntryName}" = builtins.toJSON {
-          theme = "auto";
-
-          authentication_backend = {
-            password_reset.disable = true;
-            password_change.disable = true;
-            refresh_interval = "disable";
-
-            ldap = {
-              address = "ldap://${apps.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString apps.lldap.ports.ldap}";
-              implementation = "lldap";
-
-              base_dn = lldap.baseDn;
-
-              user = "UID=admin,OU=people,DC=${network.sld},DC=${network.tld}";
-            };
-          };
-
-          access_control = {
-            default_policy = "deny";
-            rules = lib.pipe apps [
-              (lib.filterAttrs (
-                name: value:
-                value ? http && value.http ? subdomain && value ? authSubject && value.authSubject != null
-              ))
-              (lib.mapAttrsToList (
-                name: value:
-                let
-                  domain = if value.http ? domain then value.http.domain else network.domain;
-                in
-                {
-                  domain = "${value.http.subdomain}.${domain}";
-                  policy = "one_factor";
-                  subject = value.authSubject;
-                }
-              ))
-            ];
-          };
-
-          storage = {
-            postgres = {
-              address = "tcp://${postgres.name}.${namespaces.auth}.svc.cluster.local";
-              database = postgres.autheliaDatabase;
-              username = "postgres";
-            };
-          };
-
-          session.cookies = [
-            {
-              domain = network.domain;
-              authelia_url = "https://${apps.authelia.http.subdomain}.${network.domain}";
-            }
-          ];
-
-          # todo: smtp
-          notifier = {
-            disable_startup_check = true;
-            filesystem.filename = "/tmp/notification.txt";
-          };
-        };
+        data."${authelia.configEntryName}" = autheliaConfig;
       };
 
       deployments."${authelia.name}".spec = {
         replicas = 1;
         selector.matchLabels = apps.authelia.labels;
         template = {
-          metadata.labels = apps.authelia.labels;
+          metadata = {
+            labels = apps.authelia.labels;
+            annotations."meta.config.hash" = autheliaConfigHash;
+            annotations."meta.secret.hash" = secretConfigHash;
+          };
           spec = {
             enableServiceLinks = false;
             containers.authelia = {
@@ -254,7 +272,10 @@ in
         replicas = 1;
         selector.matchLabels = apps.lldap.labels;
         template = {
-          metadata.labels = apps.lldap.labels;
+          metadata = {
+            labels = apps.lldap.labels;
+            annotations."meta.secrets.hash" = secretConfigHash;
+          };
           spec = {
             containers.lldap = {
               image = lldap.image;
@@ -313,7 +334,10 @@ in
         replicas = 1;
         selector.matchLabels = postgres.labels;
         template = {
-          metadata.labels = postgres.labels;
+          metadata = {
+            labels = postgres.labels;
+            annotations."meta.secret.hash" = secretConfigHash;
+          };
           spec = {
             containers.postgres = {
               image = postgres.image;
@@ -367,19 +391,17 @@ in
 
       ## caddy
       configMaps."${caddy.name}" = {
-        data.Caddyfile = ''
-          {
-            auto_https off
-          }
-        ''
-        + lib.concatStrings routeBlocks;
+        data.Caddyfile = caddyConfig;
       };
 
       deployments."${caddy.name}".spec = {
         replicas = 1;
         selector.matchLabels = caddy.labels;
         template = {
-          metadata.labels = caddy.labels;
+          metadata = {
+            labels = caddy.labels;
+            annotations."meta.config.hash" = caddyConfigHash;
+          };
           spec = {
             containers.caddy = {
               image = caddy.image;
