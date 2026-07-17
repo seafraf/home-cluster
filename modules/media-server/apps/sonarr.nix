@@ -23,6 +23,13 @@ in
 
   env = [
     {
+      name = "SONARR__AUTH__APIKEY";
+      valueFrom.secretKeyRef = {
+        name = "media-server-secrets";
+        key = "SONARR_API_KEY";
+      };
+    }
+    {
       name = "SONARR__AUTH__METHOD";
       value = "External";
     }
