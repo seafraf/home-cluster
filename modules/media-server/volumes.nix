@@ -41,7 +41,7 @@
 
   series = {
     name = "${namespaces.mediaServer}-series";
-    size = "5Ti";
+    size = "8Ti";
     mountPath = "/media/series";
     class = storage.hdd;
   };
