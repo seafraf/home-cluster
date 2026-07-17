@@ -1,27 +1,23 @@
 {
   namespaces,
-  network,
   storage,
+  app,
   ...
 }:
 let
-  appName = "seer";
   configDir = "/app/config";
 
   volumes = import ../volumes.nix {
     inherit
       namespaces
       storage
-      appName
       configDir
       ;
+    appName = app.name;
   };
 in
 {
-  name = appName;
-  subdomain = "request";
   image = "ghcr.io/seerr-team/seerr:v3.3.0";
-  port = 5055;
   configDir = configDir;
   volumes = [ volumes.config ];
 }

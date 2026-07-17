@@ -1,27 +1,24 @@
 {
   namespaces,
-  network,
   storage,
+  app,
   ...
 }:
 let
-  appName = "plex";
   configDir = "/config";
 
   volumes = import ../volumes.nix {
     inherit
       namespaces
       storage
-      appName
       configDir
       ;
+    appName = app.name;
   };
 in
 {
-  name = appName;
-  subdomain = appName;
   image = "linuxserver/plex:version-1.43.3.10828-00f62d37d";
-  port = 32400;
+
   configDir = configDir;
   runtimeClassName = "nvidia";
 

@@ -2,32 +2,35 @@
   namespaces,
   network,
   storage,
+  app,
   ...
 }:
 let
-  appName = "jellyfin";
   configDir = "/config";
 
   volumes = import ../volumes.nix {
     inherit
       namespaces
       storage
-      appName
       configDir
       ;
+    appName = app.name;
   };
+
+  domain =
+    if app.http ? domain then
+      "${app.http.subdomain}.${app.http.domain}"
+    else
+      "${app.http.subdomain}.${network.domain}";
 in
 {
-  name = appName;
-  subdomain = appName;
   image = "linuxserver/jellyfin:10.11.11";
-  port = 8096;
   configDir = configDir;
   runtimeClassName = "nvidia";
   env = [
     {
       name = "JELLYFIN_PublishedServerUrl";
-      value = "jellyfin.${network.domain}";
+      value = domain;
     }
   ];
   volumes = [

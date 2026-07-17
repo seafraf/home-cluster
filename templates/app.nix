@@ -10,6 +10,9 @@
       with lib;
       with network;
       {
+        name = lib.mkOption {
+          type = lib.types.str;
+        };
         labels = lib.mkOption {
           default = { };
         };

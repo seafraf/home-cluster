@@ -1,27 +1,23 @@
 {
   namespaces,
-  network,
   storage,
+  app,
   ...
 }:
 let
-  appName = "sonarr";
   configDir = "/config";
 
   volumes = import ../volumes.nix {
     inherit
       namespaces
       storage
-      appName
       configDir
       ;
+    appName = app.name;
   };
 in
 {
-  name = appName;
-  subdomain = appName;
   image = "linuxserver/sonarr:4.0.19";
-  port = 8989;
   configDir = configDir;
   volumes = [
     volumes.config

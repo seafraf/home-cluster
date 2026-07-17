@@ -58,8 +58,9 @@
           hdd = "longhorn-hdd";
         };
 
-        namespaces = import ./namespaces.nix { };
-        apps = import ./apps.nix { inherit namespaces; };
+        namespaces = import ./registry/namespaces.nix { };
+        groups = import ./registry/groups.nix { };
+        apps = import ./registry/apps.nix { inherit namespaces groups; };
 
         crds = builtins.mapAttrs (
           _: path:
@@ -90,6 +91,7 @@
                     apps
                     auth
                     namespaces
+                    groups
                     ;
                 };
               }

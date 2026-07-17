@@ -1,42 +1,46 @@
 {
   charts,
   lib,
-  options,
   network,
   storage,
   namespaces,
+  auth,
+  apps,
   ...
 }:
 let
   inherit network storage;
-  
-  mediaAppFiles = [
-    ./apps/plex.nix
-    ./apps/jellyfin.nix
 
-    ./apps/decypharr.nix
-    ./apps/transmission.nix
+  mediaAppFiles = {
+    plex = ./apps/plex.nix;
+    jellyfin = ./apps/jellyfin.nix;
 
-    ./apps/sonarr.nix
-    ./apps/radarr.nix
-    ./apps/seer.nix
-    ./apps/prowlarr.nix
-  ];
+    decypharr = ./apps/decypharr.nix;
+    transmission = ./apps/transmission.nix;
+
+    sonarr = ./apps/sonarr.nix;
+    radarr = ./apps/radarr.nix;
+    seer = ./apps/seer.nix;
+    prowlarr = ./apps/prowlarr.nix;
+  };
+
+  route = import ../../templates/app.nix {
+    inherit
+      lib
+      network
+      auth
+      namespaces
+      ;
+  };
 in
 {
   templates.mediaApplication = {
     options = with lib; {
-      name = mkOption {
-        type = lib.types.str;
-      };
-      subdomain = mkOption {
-        type = lib.types.str;
+      baseApp = mkOption {
+        # type = route.templates.app.options;
       };
       image = mkOption {
         type = lib.types.str;
-      };
-      port = mkOption {
-        type = lib.types.ints.u16;
       };
       configDir = mkOption {
         type = lib.types.str;
@@ -76,9 +80,9 @@ in
       {
         deployments."${name}".spec = {
           replicas = 1;
-          selector.matchLabels = labels;
+          selector.matchLabels = cfg.baseApp.labels;
           template = {
-            metadata.labels = labels;
+            metadata.labels = cfg.baseApp.labels;
             spec = {
               securityContext.fsGroup = pgid;
 
@@ -122,50 +126,6 @@ in
             };
           };
         };
-
-        services."${name}".spec = {
-          selector = labels;
-          ports.http = {
-            port = cfg.port;
-            targetPort = cfg.port;
-            appProtocol = "http";
-          };
-        };
-
-        httpRoutes."${name}-${network.gateway}".spec = {
-          hostnames = [ "${cfg.subdomain}.${network.domain}" ];
-          parentRefs = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-              name = network.gateway;
-              namespace = namespaces.network;
-            }
-          ];
-
-          rules = [
-            {
-              backendRefs = [
-                {
-                  group = "";
-                  kind = "Service";
-                  name = cfg.name;
-                  namespace = namespaces.mediaServer;
-                  port = cfg.port;
-                  weight = 1;
-                }
-              ];
-              matches = [
-                {
-                  path = {
-                    type = "PathPrefix";
-                    value = "/";
-                  };
-                }
-              ];
-            }
-          ];
-        };
       };
   };
 
@@ -176,28 +136,6 @@ in
     extraRawYamls = [ ./sops/media-server-secrets.enc.yaml ];
 
     resources = {
-      # Grant HTTPRoutes in this namespace to access the Gateway in the network namespace
-      referenceGrants."${namespaces.mediaServer}-${network.gateway}" = {
-        metadata = {
-          namespace = namespaces.network;
-        };
-        spec = {
-          from = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "HTTPRoute";
-              namespace = namespaces.mediaServer;
-            }
-          ];
-          to = [
-            {
-              group = "gateway.networking.k8s.io";
-              kind = "Gateway";
-            }
-          ];
-        };
-      };
-
       persistentVolumeClaims =
         lib.mapAttrs'
           (_: value: {
@@ -221,19 +159,31 @@ in
           );
     };
 
-    templates.mediaApplication = lib.listToAttrs (
-      lib.imap0 (
-        i: file:
-        let
-          app = import file { inherit namespaces network storage; };
-        in
-        {
-          name = app.name;
-          value = app // {
-            id = i;
-          };
-        }
-      ) mediaAppFiles
-    );
+    templates.app = lib.mapAttrs (
+      baseAppName: _:
+      let
+        app = apps."${baseAppName}";
+      in
+      app
+    ) mediaAppFiles;
+
+    templates.mediaApplication = lib.mapAttrs (
+      baseAppName: filePath:
+      let
+        app = apps."${baseAppName}";
+        mediaApp = import filePath {
+          inherit
+            namespaces
+            network
+            storage
+            app
+            ;
+        };
+      in
+      mediaApp
+      // {
+        baseApp = app;
+      }
+    ) mediaAppFiles;
   };
 }
