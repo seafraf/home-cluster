@@ -16,49 +16,61 @@ let
       labels = {
         "app.kubernetes.io/name" = name;
       };
-      service = {
-        inherit name;
-        namespace = namespace;
-        spec = {
-          selector = labels;
-          ports = [
-            {
-              name = "http";
-              port = ports.http;
-              targetPort = ports.http;
-            }
-          ];
-        };
-      };
+      services = [
+        {
+          inherit name;
+          namespace = namespace;
+          spec = {
+            selector = labels;
+            ports = [
+              {
+                name = "http";
+                port = ports.http;
+                targetPort = ports.http;
+              }
+            ];
+          };
+        }
+      ];
       http = {
         servicePort = ports.http;
+        serviceName = name;
+        serviceNamespace = namespace;
+
         subdomain = subdomain;
       };
     };
 in
 {
   argocd = {
-    service = {
-      name = "argocd-server";
-      namespace = namespaces.argocd;
+    http = {
+      servicePort = 80;
+      serviceName = "argocd-server";
+      serviceNamespace = namespaces.argocd;
+
+      subdomain = "argocd";
     };
-    http.subdomain = "argocd";
   };
 
   rancher = {
-    service = {
-      name = "rancher";
-      namespace = namespaces.rancher;
+    http = {
+      servicePort = 80;
+      serviceName = "rancher";
+      serviceNamespace = namespaces.rancher;
+
+      subdomain = "rancher";
     };
-    http.subdomain = "rancher";
   };
 
   longhorn = {
-    service = {
-      name = "longhorn-frontend";
-      namespace = namespaces.longhorn;
+    http = {
+      servicePort = 80;
+      serviceName = "longhorn-frontend";
+      serviceNamespace = namespaces.longhorn;
+
+      subdomain = "longhorn";
     };
-    http.subdomain = "longhorn";
+
     authSubject = [ groups.clusterAdmin ];
   };
 
@@ -78,56 +90,38 @@ in
     labels = {
       "app.kubernetes.io/name" = "lldap";
     };
-    service = {
-      name = "lldap";
-      namespace = namespaces.auth;
-      spec = {
-        selector = labels;
-        ports = [
-          {
-            name = "http";
-            port = ports.http;
-            targetPort = ports.http;
-          }
-          {
-            name = "ldap";
-            port = ports.ldap;
-            targetPort = ports.ldap;
-          }
-          {
-            name = "ldaps";
-            port = ports.ldaps;
-            targetPort = ports.ldaps;
-          }
-        ];
-      };
-    };
+    services = [
+      {
+        name = "lldap";
+        namespace = namespaces.auth;
+        spec = {
+          selector = labels;
+          ports = [
+            {
+              name = "http";
+              port = ports.http;
+              targetPort = ports.http;
+            }
+            {
+              name = "ldap";
+              port = ports.ldap;
+              targetPort = ports.ldap;
+            }
+            {
+              name = "ldaps";
+              port = ports.ldaps;
+              targetPort = ports.ldaps;
+            }
+          ];
+        };
+      }
+    ];
     http = {
       servicePort = ports.http;
-      subdomain = "ldap";
-    };
-  };
+      serviceName = "longhorn-frontend";
+      serviceNamespace = namespaces.auth;
 
-  postgres = rec {
-    ports = {
-      postgres = 5432;
-    };
-    labels = {
-      "app.kubernetes.io/name" = "postgres";
-    };
-    service = {
-      name = "postgres";
-      namespace = namespaces.database;
-      spec = {
-        selector = labels;
-        ports = [
-          {
-            name = "postgres";
-            port = ports.postgres;
-            targetPort = ports.postgres;
-          }
-        ];
-      };
+      subdomain = "ldap";
     };
   };
 

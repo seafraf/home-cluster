@@ -21,4 +21,18 @@ in
     name = "auth";
     size = "10Gi";
   };
+
+  mediaServer = {
+    dbs = {
+      # sonarr = unfirmDatabase "sonarr";
+      # radarr = unfirmDatabase "radarr";
+      # prowlarr = unfirmDatabase "prowlarr";
+      # sonarr = unfirmDatabase "sonarr";
+    };
+
+    instances = 1;
+    namespace = namespaces.mediaServer;
+    name = "media-server";
+    size = "10Gi";
+  };
 }

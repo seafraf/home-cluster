@@ -19,21 +19,29 @@
         ports = lib.mkOption {
           default = { };
         };
-        service = lib.mkOption {
-          type = types.submodule {
-            options = {
-              name = lib.mkOption {
-                type = types.str;
+        services = lib.mkOption {
+          type = types.listOf (
+            types.submodule {
+              options = {
+                name = lib.mkOption {
+                  type = types.str;
+                };
+                annotations = lib.mkOption {
+                  type = types.attrsOf types.str;
+                  default = { };
+                };
+                namespace = lib.mkOption {
+                  type = types.str;
+                };
+                spec = lib.mkOption {
+                  type = types.nullOr types.anything;
+                  description = "The spec for the service, if this is set the service will be created, if this is not set it is assumed that the service already exists";
+                  default = null;
+                };
               };
-              namespace = lib.mkOption {
-                type = types.str;
-              };
-              spec = lib.mkOption {
-                description = "The spec for the service, if this is set the service will be created, if this is not set it is assumed that the service already exists";
-                default = null;
-              };
-            };
-          };
+            }
+          );
+          default = [ ];
         };
         http = lib.mkOption {
           type = types.nullOr (
@@ -54,9 +62,14 @@
                   type = lib.types.str;
                   default = namespaces.network;
                 };
+                serviceName = lib.mkOption {
+                  type = lib.types.str;
+                };
+                serviceNamespace = lib.mkOption {
+                  type = lib.types.str;
+                };
                 servicePort = lib.mkOption {
                   type = lib.types.ints.u32;
-                  default = 80;
                 };
                 weight = lib.mkOption {
                   type = lib.types.ints.s32;
@@ -91,17 +104,25 @@
       }:
       let
         cfg = config;
+
+        # serviceName =
       in
       lib.mkMerge [
-        (lib.mkIf (cfg.service.spec != null) {
-          services."${cfg.service.name}" = {
-            metadata = {
-              name = cfg.service.name;
-              namespace = cfg.service.namespace;
-            };
-            spec = cfg.service.spec;
-          };
-        })
+        {
+          services = lib.listToAttrs (
+            map (service: {
+              name = service.name;
+              value = {
+                metadata = {
+                  name = service.name;
+                  namespace = service.namespace;
+                  annotations = service.annotations;
+                };
+                spec = service.spec;
+              };
+            }) cfg.services
+          );
+        }
 
         (lib.mkIf (cfg.http != null) {
           httpRoutes."${cfg.http.subdomain}-${cfg.http.gatewayName}" = {
@@ -126,8 +147,8 @@
                         {
                           group = "";
                           kind = "Service";
-                          name = cfg.service.name;
-                          namespace = cfg.service.namespace;
+                          name = cfg.http.serviceName;
+                          namespace = cfg.http.serviceNamespace;
                           port = cfg.http.servicePort;
                           weight = cfg.http.weight;
                         }
@@ -151,10 +172,14 @@
 
         # this results in merges that put more than one from entry sometimes.. but it doesn't cause issues
         (lib.mkIf
-          (cfg.http != null && cfg.http.gatewayNamespace != cfg.service.namespace && cfg.authSubject == null)
+          (
+            cfg.http != null
+            && cfg.authSubject == null
+            && cfg.http.serviceNamespace != cfg.http.gatewayNamespace
+          )
           {
-            referenceGrants."${cfg.service.namespace}-${cfg.http.gatewayName}" = {
-              metadata.namespace = cfg.service.namespace;
+            referenceGrants."${cfg.http.serviceNamespace}-${cfg.http.gatewayName}" = {
+              metadata.namespace = cfg.http.serviceNamespace;
 
               spec = {
                 from = [

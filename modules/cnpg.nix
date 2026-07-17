@@ -20,10 +20,9 @@
       # secrets for database credentials
       ++ lib.concatMap (
         cluster:
-        let
-          dbs = db.${cluster.name}.dbs;
-        in
-        map (db: ./sops/db + "/${cluster.name}/${dbs.${db.name}.secret}.enc.yaml") (builtins.attrValues dbs)
+        map (db: ./sops/db + "/${cluster.name}/${cluster.dbs.${db.name}.secret}.enc.yaml") (
+          builtins.attrValues cluster.dbs
+        )
       ) (builtins.attrValues db);
 
     resources.cnpgClusters = lib.mapAttrs (_: cluster: {

@@ -40,12 +40,17 @@ let
 
   mkRouteBlock =
     name: cfg:
-    let
-      host = "${cfg.http.subdomain}.${network.domain}";
-      service = "${cfg.service.name}.${cfg.service.namespace}.svc.cluster.local";
-      port = cfg.http.servicePort or 80;
-    in
-    if (cfg.authSubject or null) != null then
+    if
+      (cfg.authSubject or null) != null
+      && cfg ? http
+      && cfg.http ? serviceName
+      && cfg.http ? serviceNamespace
+    then
+      let
+        host = "${cfg.http.subdomain}.${network.domain}";
+        service = "${cfg.http.serviceName}.${cfg.http.serviceNamespace}.svc.cluster.local";
+        port = cfg.http.servicePort or 80;
+      in
       ''
         ${host}:80 {
             forward_auth ${authelia.name}.${namespaces.auth}.svc.cluster.local:${toString apps.authelia.ports.http} {
@@ -85,7 +90,7 @@ let
       refresh_interval = "disable";
 
       ldap = {
-        address = "ldap://${apps.lldap.service.name}.${namespaces.auth}.svc.cluster.local:${toString apps.lldap.ports.ldap}";
+        address = "ldap://${apps.lldap.http.serviceName}.${namespaces.auth}.svc.cluster.local:${toString apps.lldap.ports.ldap}";
         implementation = "lldap";
 
         base_dn = lldap.baseDn;
