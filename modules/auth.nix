@@ -6,6 +6,7 @@
   auth,
   apps,
   namespaces,
+  db,
   ...
 }:
 let
@@ -18,22 +19,6 @@ let
     configMountPath = "/config";
     configName = "config";
     configEntryName = "configuration.yml";
-  };
-
-  postgres = {
-    name = "postgres";
-    image = "postgres:15.18";
-    labels = {
-      "app.kubernetes.io/name" = postgres.name;
-    };
-
-    autheliaDatabase = "authelia";
-    lldapDatabase = "lldap"; # not used yet
-
-    claimName = "${postgres.name}-data";
-    claimSize = "2Gi";
-
-    port = 5432;
   };
 
   lldap = {
@@ -135,9 +120,9 @@ let
 
     storage = {
       postgres = {
-        address = "tcp://${postgres.name}.${namespaces.auth}.svc.cluster.local";
-        database = postgres.autheliaDatabase;
-        username = "postgres";
+        address = "tcp://${db.default.name}-rw.${namespaces.database}.svc.cluster.local";
+        database = db.default.dbs.authelia.name;
+        username = db.default.dbs.authelia.user;
       };
     };
 
@@ -205,6 +190,11 @@ in
                   name = "secrets";
                   readOnly = true;
                 }
+                {
+                  mountPath = "/app/db-secret";
+                  name = "db-secret";
+                  readOnly = true;
+                }
               ];
               env = [
                 {
@@ -225,7 +215,7 @@ in
                 }
                 {
                   name = "AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE";
-                  value = "/app/secrets/POSTGRES_PASSWORD";
+                  value = "/app/db-secret/POSTGRES_PASSWORD";
                 }
               ];
             };
@@ -255,8 +245,16 @@ in
                       key = "STORAGE_ENCRYPTION_KEY";
                       path = "STORAGE_ENCRYPTION_KEY";
                     }
+                  ];
+                };
+              }
+              {
+                name = "db-secret";
+                secret = {
+                  secretName = db.default.dbs.authelia.secret;
+                  items = [
                     {
-                      key = "POSTGRES_PASSWORD";
+                      key = "password";
                       path = "POSTGRES_PASSWORD";
                     }
                   ];
@@ -327,66 +325,6 @@ in
         accessModes = [ "ReadWriteOnce" ];
         resources.requests.storage = lldap.claimSize;
         storageClassName = storage.ssd;
-      };
-
-      ## postgres
-      deployments."${postgres.name}".spec = {
-        replicas = 1;
-        selector.matchLabels = postgres.labels;
-        template = {
-          metadata = {
-            labels = postgres.labels;
-            annotations."meta.secret.hash" = secretConfigHash;
-          };
-          spec = {
-            containers.postgres = {
-              image = postgres.image;
-              volumeMounts = [
-                {
-                  name = postgres.claimName;
-                  mountPath = "/var/lib/postgresql/data";
-                  subPath = "db";
-                }
-              ];
-              env = [
-                {
-                  name = "POSTGRES_PASSWORD";
-                  valueFrom.secretKeyRef = {
-                    name = "auth-secrets";
-                    key = "POSTGRES_PASSWORD";
-                  };
-                }
-                {
-                  name = "POSTGRES_DB";
-                  value = postgres.autheliaDatabase;
-                }
-              ];
-            };
-            volumes = [
-              {
-                name = postgres.claimName;
-                persistentVolumeClaim.claimName = postgres.claimName;
-              }
-            ];
-          };
-        };
-      };
-
-      persistentVolumeClaims."${postgres.claimName}".spec = {
-        accessModes = [ "ReadWriteOnce" ];
-        resources.requests.storage = postgres.claimSize;
-        storageClassName = storage.ssd;
-      };
-
-      services."${postgres.name}".spec = {
-        selector = postgres.labels;
-        ports = [
-          {
-            name = "http";
-            port = postgres.port;
-            targetPort = postgres.port;
-          }
-        ];
       };
 
       ## caddy
