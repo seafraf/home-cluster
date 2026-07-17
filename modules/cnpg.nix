@@ -25,21 +25,24 @@
         )
       ) (builtins.attrValues db);
 
-    resources.cnpgClusters = lib.mapAttrs (_: cluster: {
-      metadata.namespace = cluster.namespace;
-      spec = {
-        instances = cluster.instances;
-        storage.size = cluster.size;
-        managed.roles = builtins.attrValues (
-          builtins.mapAttrs (k: v: {
-            name = v.name;
-            ensure = "present";
-            "inherit" = true;
-            connectionLimit = -1;
-            login = true;
-            passwordSecret.name = v.secret;
-          }) cluster.dbs
-        );
+    resources.cnpgClusters = lib.mapAttrs' (_: cluster: {
+      name = cluster.name;
+      value = {
+        metadata.namespace = cluster.namespace;
+        spec = {
+          instances = cluster.instances;
+          storage.size = cluster.size;
+          managed.roles = builtins.attrValues (
+            builtins.mapAttrs (k: v: {
+              name = v.name;
+              ensure = "present";
+              "inherit" = true;
+              connectionLimit = -1;
+              login = true;
+              passwordSecret.name = v.secret;
+            }) cluster.dbs
+          );
+        };
       };
     }) db;
 
