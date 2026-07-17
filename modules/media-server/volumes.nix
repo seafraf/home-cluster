@@ -27,7 +27,8 @@
   download = {
     name = "${namespaces.mediaServer}-download";
     size = "256Gi";
-    mountPath = "/media/download/${appName}";
+    mountPath = "/media/download";
+    subPath = appName;
     class = storage.hdd;
   };
 
