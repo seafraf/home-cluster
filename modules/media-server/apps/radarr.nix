@@ -63,6 +63,12 @@ in
 
   initQueries = [
     (util.generateDownloadClients "radarr" "RADARR_API_KEY")
+    ''
+      BEGIN;
+      TRUNCATE TABLE "RootFolders";
+      INSERT INTO "RootFolders" ("Path") VALUES ('${volumes.movies.mountPath}');
+      COMMIT;
+    ''
   ];
 
   queryVariables = [
@@ -78,8 +84,6 @@ in
   volumes = [
     volumes.config
     volumes.download
-    volumes.anime
-    volumes.series
     volumes.movies
   ];
 }

@@ -63,6 +63,12 @@ in
 
   initQueries = [
     (util.generateDownloadClients "sonarr" "SONARR_API_KEY")
+    ''
+      BEGIN;
+      TRUNCATE TABLE "RootFolders";
+      INSERT INTO "RootFolders" ("Path") VALUES ('${volumes.anime.mountPath}'), ('${volumes.series.mountPath}'), ('${volumes.movies.mountPath}');
+      COMMIT;
+    ''
   ];
 
   queryVariables = [
