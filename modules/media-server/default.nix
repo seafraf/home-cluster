@@ -63,6 +63,14 @@ in
         type = lib.types.ints.u8;
         default = 0;
       };
+      initQueries = mkOption {
+        type = types.listOf lib.types.str;
+        description = "A list of initializing queries required for this app. The name of this app must exist as a database for this to be used";
+        default = [ ];
+      };
+      queryVariables = mkOption {
+        default = [ ];
+      };
     };
 
     output =
@@ -80,56 +88,130 @@ in
 
         pgid = 2000;
         puid = "1" + lib.fixedWidthString 3 "0" (toString config.id);
+
+        initQuerySet = builtins.listToAttrs (
+          lib.imap0 (
+            index: sql:
+            let
+              queryName = "query${toString index}";
+            in
+            {
+              name = queryName;
+              value = sql;
+            }
+          ) cfg.initQueries
+        );
+
+        initQueryConfigMap = "${name}-db-queries";
+        queriesConfigHash = builtins.hashString "sha256" (builtins.toJSON initQuerySet);
+
+        psqlVarArgs = lib.concatStringsSep " " (
+          map (v: ''-v ${v.name}="${"$" + v.name}"'') cfg.queryVariables
+        );
       in
       {
-        deployments."${name}".spec = {
-          replicas = 1;
-          selector.matchLabels = cfg.baseApp.labels;
-          template = {
-            metadata.labels = cfg.baseApp.labels;
-            spec = {
-              securityContext.fsGroup = pgid;
-
-              containers."${name}" = {
-                image = cfg.image;
-                env = [
-                  {
-                    name = "PUID";
-                    value = puid;
-                  }
-                  {
-                    name = "PGID";
-                    value = toString pgid;
-                  }
-                  {
-                    name = "TZ";
-                    value = "Europe/Stockholm";
-                  }
-                  {
-                    name = "UMASK";
-                    value = "002";
-                  }
-                ]
-                ++ cfg.env;
-                volumeMounts = map (v: {
-                  name = v.name;
-                  mountPath = v.mountPath;
-                  subPath = v.volumePath or null;
-                }) cfg.volumes;
+        deployments."${name}" = {
+          spec = {
+            replicas = 1;
+            selector.matchLabels = cfg.baseApp.labels;
+            template = {
+              metadata = {
+                annotations."meta.secret.hash" = secretConfigHash;
+                annotations."meta.queries.hash" = queriesConfigHash;
+                labels = cfg.baseApp.labels;
               };
+              spec = {
+                enableServiceLinks = false;
+                securityContext.fsGroup = pgid;
 
-              volumes = map (v: {
-                name = v.name;
-                persistentVolumeClaim = {
-                  claimName = v.name;
+                initContainers = lib.mapAttrs' (queryName: sql: {
+                  name = "exec-query-${queryName}";
+                  value = {
+                    image = "postgres:16-alpine";
+                    env = [
+                      {
+                        name = "PGHOST";
+                        value = "${db.mediaServer.name}-rw.${db.mediaServer.namespace}.svc.cluster.local";
+                      }
+                      {
+                        name = "PGUSER";
+                        value = db.mediaServer.dbs."${name}".user;
+                      }
+                      {
+                        name = "PGPASSWORD";
+                        valueFrom.secretKeyRef = {
+                          inherit name;
+                          key = "password";
+                        };
+                      }
+                    ]
+                    ++ cfg.queryVariables;
+                    command = [
+                      "sh"
+                      "-c"
+                      "psql -v ON_ERROR_STOP=1 ${psqlVarArgs} -f /queries/${queryName}"
+                    ];
+                    volumeMounts = [
+                      {
+                        name = initQueryConfigMap;
+                        mountPath = "/queries";
+                      }
+                    ];
+                  };
+                }) initQuerySet;
+
+                containers."${name}" = {
+                  image = cfg.image;
+                  env = [
+                    {
+                      name = "PUID";
+                      value = puid;
+                    }
+                    {
+                      name = "PGID";
+                      value = toString pgid;
+                    }
+                    {
+                      name = "TZ";
+                      value = "Europe/Stockholm";
+                    }
+                    {
+                      name = "UMASK";
+                      value = "002";
+                    }
+                  ]
+                  ++ cfg.env;
+                  volumeMounts = map (v: {
+                    name = v.name;
+                    mountPath = v.mountPath;
+                    subPath = v.volumePath or null;
+                  }) cfg.volumes;
                 };
-              }) cfg.volumes;
-            }
-            // lib.optionalAttrs (cfg.runtimeClassName != null) {
-              runtimeClassName = cfg.runtimeClassName;
+
+                volumes =
+                  (map (v: {
+                    name = v.name;
+                    persistentVolumeClaim = {
+                      claimName = v.name;
+                    };
+                  }) cfg.volumes)
+                  ++ lib.optionals (initQuerySet != { }) [
+                    {
+                      name = initQueryConfigMap;
+                      configMap.name = initQueryConfigMap;
+                    }
+                  ];
+              }
+              // lib.optionalAttrs (cfg.runtimeClassName != null) {
+                runtimeClassName = cfg.runtimeClassName;
+              };
             };
           };
         };
+
+      }
+      // lib.optionalAttrs (initQuerySet != { }) {
+        configMaps."${initQueryConfigMap}".data = initQuerySet;
       };
   };
 
@@ -181,6 +263,7 @@ in
             network
             storage
             app
+            apps
             db
             ;
         };

@@ -2,6 +2,7 @@
   namespaces,
   storage,
   app,
+  apps,
   ...
 }:
 let
@@ -33,52 +34,80 @@ in
       };
     }
     {
-      name = "USENET__0__PROVIDERS__HOST";
+      name = "USENET__PROVIDERS__0__HOST";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
         key = "DECYPHARR_USENET_HOST";
       };
     }
     {
-      name = "USENET__0__PROVIDERS__PORT";
+      name = "USENET__PROVIDERS__0__PORT";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
         key = "DECYPHARR_USENET_PORT";
       };
     }
     {
-      name = "USENET__0__PROVIDERS__USERNAME";
+      name = "USENET__PROVIDERS__0__USERNAME";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
         key = "DECYPHARR_USENET_USER";
       };
     }
     {
-      name = "USENET__0__PROVIDERS__PASSWORD";
+      name = "USENET__PROVIDERS__0__PASSWORD";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
         key = "DECYPHARR_USENET_PASS";
       };
     }
     {
-      name = "USENET__0__PROVIDERS__SSL";
+      name = "USENET__PROVIDERS__0__SSL";
       value = "true";
     }
     {
-      name = "USENET__0__PROVIDERS__MAX_CONNECTIONS";
-      value = "20";
-    }
-    {
-      name = "USENET__0__PROVIDERS__PRIORITY";
-      value = "1";
+      name = "USENET__PROVIDERS__0__BACKBONE";
+      value = "Omicron";
     }
     {
       name = "MOUNT__TYPE";
       value = "none";
     }
     {
-      name = "MOUNT__PATH";
+      name = "DOWNLOAD_FOLDER";
       value = "/media/download";
+    }
+
+    {
+      name = "ARRS__0__NAME";
+      value = "Sonarr";
+    }
+    {
+      name = "ARRS__0__HOST";
+      value = "http://${apps.sonarr.http.serviceName}.${apps.sonarr.http.serviceNamespace}.svc.cluster.local:${toString apps.sonarr.http.servicePort}";
+    }
+    {
+      name = "ARRS__0__TOKEN";
+      valueFrom.secretKeyRef = {
+        name = "media-server-secrets";
+        key = "SONARR_API_KEY";
+      };
+    }
+
+    {
+      name = "ARRS__1__NAME";
+      value = "Radarr";
+    }
+    {
+      name = "ARRS__1__HOST";
+      value = "http://${apps.radarr.http.serviceName}.${apps.radarr.http.serviceNamespace}.svc.cluster.local:${toString apps.radarr.http.servicePort}";
+    }
+    {
+      name = "ARRS__1__TOKEN";
+      valueFrom.secretKeyRef = {
+        name = "media-server-secrets";
+        key = "RADARR_API_KEY";
+      };
     }
   ];
 
