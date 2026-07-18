@@ -5,12 +5,12 @@
       decypharr = apps.decypharr.http;
       app = apps.${serviceName};
 
-      serviceSpecific =
+      # transmission cannot use category and directory
+      serviceSpecificSettingsBase =
         if serviceName == "sonarr" then
           ''
             ,
             'tvCategory', '${serviceName}',
-            'tvDirectory', '${volumes.download.mountPath}',
             'recentTvPriority', -100,
             'olderTvPriority', -100
           ''
@@ -18,7 +18,6 @@
           ''
             ,
             'movieCategory', '${serviceName}',
-            'movieDirectory', '${volumes.download.mountPath}',
             'recentMoviePriority', -100,
             'olderMoviePriority', -100
           ''
@@ -26,8 +25,21 @@
         else
           ''
             ,
+            'category', '${serviceName}',
             'priority', 0
           '';
+
+      serviceSpecificSettingsDecypharr =
+        if serviceName == "sonarr" then
+          ''
+            ,'tvDirectory', '${volumes.download.mountPath}'
+          ''
+        else if serviceName == "radarr" then
+          ''
+            ,'movieDirectory', '${volumes.download.mountPath}'
+          ''
+        else
+          "";
 
       serviceSpecificColumns = if serviceName != "prowlarr" then '',"Tags"'' else "";
       serviceSpecificValues = if serviceName != "prowlarr" then ",'[]'" else "";
@@ -46,7 +58,7 @@
           'urlBase', 'sabnzbd',
           'username', 'http://${app.http.serviceName}.${app.http.serviceNamespace}.svc.cluster.local:${toString app.http.servicePort}',
           'password', :'${apiKeyEnv}'
-          ${serviceSpecific}
+          ${serviceSpecificSettingsBase}${serviceSpecificSettingsDecypharr}
         )::text, 'SabnzbdSettings'${serviceSpecificValues});
 
       INSERT INTO "DownloadClients"
@@ -60,7 +72,7 @@
           'username', ''',
           'password', ''',
           'addPaused', false
-          ${serviceSpecific}
+          ${serviceSpecificSettingsBase}
         )::text, 'TransmissionSettings'${serviceSpecificValues});
       COMMIT;
     '';
