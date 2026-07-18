@@ -186,11 +186,11 @@ in
     port = 8096;
   };
 
-  decypharr = externalHttpApp {
+  sabnzbd = externalHttpApp {
     namespace = namespaces.mediaServer;
-    name = "decypharr";
-    subdomain = "dl";
-    port = 8282;
+    name = "sabnzbd";
+    subdomain = "nzb";
+    port = 8080;
     authSubject = [ groups.mediaAdmin ];
   };
 
@@ -227,13 +227,6 @@ in
     namespace = namespaces.mediaServer;
     name = "prowlarr";
     port = 9696;
-    authSubject = [ groups.mediaAdmin ];
-  };
-
-  sabnzbd = externalHttpApp {
-    namespace = namespaces.mediaServer;
-    name = "nzb";
-    port = 8080;
     authSubject = [ groups.mediaAdmin ];
   };
 }

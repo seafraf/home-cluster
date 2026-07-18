@@ -62,7 +62,7 @@ in
   ];
 
   initQueries = [
-    (util.generateDownloadClients "sonarr" "SONARR_API_KEY")
+    (util.generateDownloadClients "sonarr" "SABNZDB_API_KEY")
     ''
       BEGIN;
       TRUNCATE TABLE "RootFolders";
@@ -73,10 +73,10 @@ in
 
   queryVariables = [
     {
-      name = "SONARR_API_KEY";
+      name = "SABNZDB_API_KEY";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
-        key = "SONARR_API_KEY";
+        key = "SABNZDB_API_KEY";
       };
     }
   ];

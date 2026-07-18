@@ -62,7 +62,7 @@ in
   ];
 
   initQueries = [
-    (util.generateDownloadClients "radarr" "RADARR_API_KEY")
+    (util.generateDownloadClients "radarr" "SABNZDB_API_KEY")
     ''
       BEGIN;
       TRUNCATE TABLE "RootFolders";
@@ -73,10 +73,10 @@ in
 
   queryVariables = [
     {
-      name = "RADARR_API_KEY";
+      name = "SABNZDB_API_KEY";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
-        key = "RADARR_API_KEY";
+        key = "SABNZDB_API_KEY";
       };
     }
   ];

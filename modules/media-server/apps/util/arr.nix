@@ -2,7 +2,7 @@
   generateDownloadClients =
     serviceName: apiKeyEnv:
     let
-      decypharr = apps.decypharr.http;
+      sabnzbd = apps.sabnzbd.http;
       app = apps.${serviceName};
 
       # transmission cannot use category and directory
@@ -29,7 +29,7 @@
             'priority', 0
           '';
 
-      serviceSpecificSettingsDecypharr =
+      serviceSpecificSettingsSabnzbd =
         if serviceName == "sonarr" then
           ''
             ,'tvDirectory', '${volumes.download.mountPath}'
@@ -50,14 +50,12 @@
       INSERT INTO "DownloadClients"
         ("Enable", "Name", "Implementation", "Settings", "ConfigContract"${serviceSpecificColumns})
         VALUES
-        (TRUE, 'Decypharr (Usenet)', 'Sabnzbd', json_build_object(
-          'host', '${decypharr.serviceName}.${decypharr.serviceNamespace}.svc.cluster.local',
-          'port', ${toString decypharr.servicePort},
+        (TRUE, 'Sabnzbd', 'SABnzbd', json_build_object(
+          'host', '${sabnzbd.serviceName}.${sabnzbd.serviceNamespace}.svc.cluster.local',
+          'port', ${toString sabnzbd.servicePort},
           'useSsl', false,
-          'urlBase', 'sabnzbd',
-          'username', 'http://${app.http.serviceName}.${app.http.serviceNamespace}.svc.cluster.local:${toString app.http.servicePort}',
-          'password', :'${apiKeyEnv}'
-          ${serviceSpecificSettingsBase}${serviceSpecificSettingsDecypharr}
+          'apiKey', :'${apiKeyEnv}'
+          ${serviceSpecificSettingsBase}${serviceSpecificSettingsSabnzbd}
         )::text, 'SabnzbdSettings'${serviceSpecificValues});
 
       INSERT INTO "DownloadClients"

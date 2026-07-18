@@ -62,7 +62,7 @@ in
   ];
 
   initQueries = [
-    (util.generateDownloadClients "prowlarr" "PROWLARR_API_KEY")
+    (util.generateDownloadClients "prowlarr" "SABNZDB_API_KEY")
     ''
       BEGIN; 
       TRUNCATE TABLE "Applications";
@@ -109,10 +109,10 @@ in
       };
     }
     {
-      name = "PROWLARR_API_KEY";
+      name = "SABNZDB_API_KEY";
       valueFrom.secretKeyRef = {
         name = "media-server-secrets";
-        key = "PROWLARR_API_KEY";
+        key = "SABNZDB_API_KEY";
       };
     }
   ];

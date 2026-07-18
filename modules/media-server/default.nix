@@ -16,7 +16,6 @@ let
     plex = ./apps/plex.nix;
     jellyfin = ./apps/jellyfin.nix;
 
-    decypharr = ./apps/decypharr.nix;
     transmission = ./apps/transmission.nix;
     sabnzbd = ./apps/sabnzbd.nix;
 
