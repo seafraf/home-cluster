@@ -66,7 +66,7 @@ in
     ''
       BEGIN;
       TRUNCATE TABLE "RootFolders";
-      INSERT INTO "RootFolders" ("Path") VALUES ('${volumes.anime.mountPath}'), ('${volumes.series.mountPath}'), ('${volumes.movies.mountPath}');
+      INSERT INTO "RootFolders" ("Path") VALUES ('${volumes.anime.mountPath}'), ('${volumes.series.mountPath}');
       COMMIT;
     ''
   ];
@@ -86,6 +86,5 @@ in
     volumes.download
     volumes.anime
     volumes.series
-    volumes.movies
   ];
 }
