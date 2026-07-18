@@ -45,7 +45,6 @@
       serviceSpecificValues = if serviceName != "prowlarr" then ",'[]'" else "";
     in
     ''
-
       BEGIN; 
       TRUNCATE TABLE "DownloadClients";
       INSERT INTO "DownloadClients"
