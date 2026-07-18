@@ -17,7 +17,7 @@ let
   };
 in
 {
-  image = "cy01/blackhole:v2.3";
+  image = "cy01/blackhole:v2.4";
   configDir = configDir;
 
   env = [
