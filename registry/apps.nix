@@ -229,4 +229,11 @@ in
     port = 9696;
     authSubject = [ groups.mediaAdmin ];
   };
+
+  sabnzbd = externalHttpApp {
+    namespace = namespaces.mediaServer;
+    name = "nzb";
+    port = 8080;
+    authSubject = [ groups.mediaAdmin ];
+  };
 }

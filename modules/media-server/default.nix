@@ -18,6 +18,7 @@ let
 
     decypharr = ./apps/decypharr.nix;
     transmission = ./apps/transmission.nix;
+    sabnzbd = ./apps/sabnzbd.nix;
 
     sonarr = ./apps/sonarr.nix;
     radarr = ./apps/radarr.nix;
