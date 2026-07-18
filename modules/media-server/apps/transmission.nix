@@ -19,5 +19,8 @@ in
 {
   image = "linuxserver/transmission:4.1.3";
   configDir = configDir;
-  volumes = [ volumes.config ];
+  volumes = [
+    volumes.config
+    volumes.download
+  ];
 }
