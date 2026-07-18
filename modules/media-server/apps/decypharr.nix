@@ -78,37 +78,37 @@ in
       value = "/media/download";
     }
 
-    {
-      name = "ARRS__0__NAME";
-      value = "Sonarr";
-    }
-    {
-      name = "ARRS__0__HOST";
-      value = "http://${apps.sonarr.http.serviceName}.${apps.sonarr.http.serviceNamespace}.svc.cluster.local:${toString apps.sonarr.http.servicePort}";
-    }
-    {
-      name = "ARRS__0__TOKEN";
-      valueFrom.secretKeyRef = {
-        name = "media-server-secrets";
-        key = "SONARR_API_KEY";
-      };
-    }
+    # {
+    #   name = "ARRS__0__NAME";
+    #   value = "Sonarr";
+    # }
+    # {
+    #   name = "ARRS__0__HOST";
+    #   value = "http://${apps.sonarr.http.serviceName}.${apps.sonarr.http.serviceNamespace}.svc.cluster.local:${toString apps.sonarr.http.servicePort}";
+    # }
+    # {
+    #   name = "ARRS__0__TOKEN";
+    #   valueFrom.secretKeyRef = {
+    #     name = "media-server-secrets";
+    #     key = "SONARR_API_KEY";
+    #   };
+    # }
 
-    {
-      name = "ARRS__1__NAME";
-      value = "Radarr";
-    }
-    {
-      name = "ARRS__1__HOST";
-      value = "http://${apps.radarr.http.serviceName}.${apps.radarr.http.serviceNamespace}.svc.cluster.local:${toString apps.radarr.http.servicePort}";
-    }
-    {
-      name = "ARRS__1__TOKEN";
-      valueFrom.secretKeyRef = {
-        name = "media-server-secrets";
-        key = "RADARR_API_KEY";
-      };
-    }
+    # {
+    #   name = "ARRS__1__NAME";
+    #   value = "Radarr";
+    # }
+    # {
+    #   name = "ARRS__1__HOST";
+    #   value = "http://${apps.radarr.http.serviceName}.${apps.radarr.http.serviceNamespace}.svc.cluster.local:${toString apps.radarr.http.servicePort}";
+    # }
+    # {
+    #   name = "ARRS__1__TOKEN";
+    #   valueFrom.secretKeyRef = {
+    #     name = "media-server-secrets";
+    #     key = "RADARR_API_KEY";
+    #   };
+    # }
   ];
 
   volumes = [

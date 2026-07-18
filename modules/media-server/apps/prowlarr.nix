@@ -2,6 +2,7 @@
   namespaces,
   storage,
   app,
+  apps,
   db,
   ...
 }:
@@ -16,12 +17,14 @@ let
       ;
     appName = app.name;
   };
+
+  util = import ./util/arr.nix { inherit apps volumes; };
 in
 {
   image = "linuxserver/prowlarr:2.4.0";
   configDir = configDir;
 
-    env = [
+  env = [
     {
       name = "PROWLARR__AUTH__APIKEY";
       valueFrom.secretKeyRef = {
@@ -55,6 +58,20 @@ in
     {
       name = "PROWLARR__LOG__DBENABLED";
       value = "False";
+    }
+  ];
+
+  initQueries = [
+    (util.generateDownloadClients "prowlarr" "PROWLARR_API_KEY")
+  ];
+
+  queryVariables = [
+    {
+      name = "PROWLARR_API_KEY";
+      valueFrom.secretKeyRef = {
+        name = "media-server-secrets";
+        key = "PROWLARR_API_KEY";
+      };
     }
   ];
 

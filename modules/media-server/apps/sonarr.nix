@@ -2,6 +2,7 @@
   namespaces,
   storage,
   app,
+  apps,
   db,
   ...
 }:
@@ -16,6 +17,8 @@ let
       ;
     appName = app.name;
   };
+
+  util = import ./util/arr.nix { inherit apps volumes; };
 in
 {
   image = "linuxserver/sonarr:4.0.19";
@@ -55,6 +58,20 @@ in
     {
       name = "SONARR__LOG__DBENABLED";
       value = "False";
+    }
+  ];
+
+  initQueries = [
+    (util.generateDownloadClients "sonarr" "SONARR_API_KEY")
+  ];
+
+  queryVariables = [
+    {
+      name = "SONARR_API_KEY";
+      valueFrom.secretKeyRef = {
+        name = "media-server-secrets";
+        key = "SONARR_API_KEY";
+      };
     }
   ];
 
