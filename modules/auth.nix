@@ -309,13 +309,13 @@ in
                 {
                   name = "POSTGRES_PASSWORD";
                   valueFrom.secretKeyRef = {
-                    name = db.auth.dbs.authelia.secret;
+                    name = db.auth.dbs.lldap.secret;
                     key = "password";
                   };
                 }
                 {
                   name = "LLDAP_DATABASE_URL";
-                  value = "postgres://${db.auth.dbs.authelia.user}:$(POSTGRES_PASSWORD)@${db.auth.name}-rw.${db.auth.namespace}.svc.cluster.local/${db.auth.dbs.authelia.name}";
+                  value = "postgres://${db.auth.dbs.lldap.user}:$(POSTGRES_PASSWORD)@${db.auth.name}-rw.${db.auth.namespace}.svc.cluster.local/${db.auth.dbs.lldap.name}";
                 }
               ];
             };
@@ -323,7 +323,7 @@ in
               {
                 name = "db-secret";
                 secret = {
-                  secretName = db.auth.dbs.authelia.secret;
+                  secretName = db.auth.dbs.lldap.secret;
                   items = [
                     {
                       key = "password";

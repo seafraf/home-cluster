@@ -14,6 +14,7 @@ in
     # containing username and password fields
     dbs = {
       authelia = unfirmDatabase "authelia";
+      lldap = unfirmDatabase "lldap";
     };
 
     instances = 1;
@@ -27,6 +28,7 @@ in
       sonarr = unfirmDatabase "sonarr";
       radarr = unfirmDatabase "radarr";
       prowlarr = unfirmDatabase "prowlarr";
+      seerr = unfirmDatabase "seerr";
     };
 
     instances = 1;
