@@ -1,12 +1,12 @@
 {
+  apps,
+  auth,
   charts,
+  db,
   lib,
+  namespaces,
   network,
   storage,
-  namespaces,
-  auth,
-  apps,
-  db,
   ...
 }:
 let
@@ -257,18 +257,20 @@ in
       baseAppName: filePath:
       let
         app = apps."${baseAppName}";
-        mediaApp = import filePath {
-          inherit
-            namespaces
-            network
-            storage
-            app
-            apps
-            db
-            ;
-        };
       in
-      mediaApp
+      (import filePath {
+        inherit
+          app
+          apps
+          auth
+          charts
+          db
+          lib
+          namespaces
+          network
+          storage
+          ;
+      })
       // {
         baseApp = app;
       }
