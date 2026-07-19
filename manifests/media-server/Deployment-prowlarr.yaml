@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowlarr
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prowlarr
+  template:
+    metadata:
+      annotations:
+        meta.queries.hash: 6943872cee5ff2135761058cdd599c8a42b117c6dcb7e7687543f1d77e6cf035
+        meta.secret.hash: 03df47e003c1e477ba28263e0edcc827c5c3b8f4eda094485c42d73f391be298
+      labels:
+        app.kubernetes.io/name: prowlarr
+    spec:
+      containers:
+        - env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "2000"
+            - name: TZ
+              value: Europe/Stockholm
+            - name: UMASK
+              value: "002"
+            - name: PROWLARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: PROWLARR_API_KEY
+                  name: media-server-secrets
+            - name: PROWLARR__AUTH__METHOD
+              value: External
+            - name: PROWLARR__POSTGRES__HOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PROWLARR__POSTGRES__USER
+              value: prowlarr
+            - name: PROWLARR__POSTGRES__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: prowlarr
+            - name: PROWLARR__POSTGRES__MAINDB
+              value: prowlarr
+            - name: PROWLARR__LOG__DBENABLED
+              value: "False"
+          image: linuxserver/prowlarr:2.4.0
+          name: prowlarr
+          volumeMounts:
+            - mountPath: /config
+              name: media-server-config
+              subPath: prowlarr
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SONARR_API_KEY="$SONARR_API_KEY" -v RADARR_API_KEY="$RADARR_API_KEY" -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -f /queries/query0
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: prowlarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: prowlarr
+            - name: SONARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SONARR_API_KEY
+                  name: media-server-secrets
+            - name: RADARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: RADARR_API_KEY
+                  name: media-server-secrets
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query0
+          volumeMounts:
+            - mountPath: /queries
+              name: prowlarr-db-queries
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SONARR_API_KEY="$SONARR_API_KEY" -v RADARR_API_KEY="$RADARR_API_KEY" -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -f /queries/query1
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: prowlarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: prowlarr
+            - name: SONARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SONARR_API_KEY
+                  name: media-server-secrets
+            - name: RADARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: RADARR_API_KEY
+                  name: media-server-secrets
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query1
+          volumeMounts:
+            - mountPath: /queries
+              name: prowlarr-db-queries
+      securityContext:
+        fsGroup: 2000
+      volumes:
+        - name: media-server-config
+          persistentVolumeClaim:
+            claimName: media-server-config
+        - configMap:
+            name: prowlarr-db-queries
+          name: prowlarr-db-queries

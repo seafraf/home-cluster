@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: radarr
+  template:
+    metadata:
+      annotations:
+        meta.queries.hash: 3336c47e88eda31e9bb55d7185fab00dc359c13167d37baed4c2c6e18bdcb418
+        meta.secret.hash: 03df47e003c1e477ba28263e0edcc827c5c3b8f4eda094485c42d73f391be298
+      labels:
+        app.kubernetes.io/name: radarr
+    spec:
+      containers:
+        - env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "2000"
+            - name: TZ
+              value: Europe/Stockholm
+            - name: UMASK
+              value: "002"
+            - name: RADARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: RADARR_API_KEY
+                  name: media-server-secrets
+            - name: RADARR__AUTH__METHOD
+              value: External
+            - name: RADARR__POSTGRES__HOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: RADARR__POSTGRES__USER
+              value: radarr
+            - name: RADARR__POSTGRES__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: radarr
+            - name: RADARR__POSTGRES__MAINDB
+              value: radarr
+            - name: RADARR__LOG__DBENABLED
+              value: "False"
+          image: linuxserver/radarr:6.1.1
+          name: radarr
+          volumeMounts:
+            - mountPath: /config
+              name: media-server-config
+              subPath: radarr
+            - mountPath: /media/download
+              name: media-server-download
+            - mountPath: /media/movies
+              name: media-server-movies
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query0
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: radarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: radarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query0
+          volumeMounts:
+            - mountPath: /queries
+              name: radarr-db-queries
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query1
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: radarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: radarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query1
+          volumeMounts:
+            - mountPath: /queries
+              name: radarr-db-queries
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query2
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: radarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: radarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query2
+          volumeMounts:
+            - mountPath: /queries
+              name: radarr-db-queries
+      securityContext:
+        fsGroup: 2000
+      volumes:
+        - name: media-server-config
+          persistentVolumeClaim:
+            claimName: media-server-config
+        - name: media-server-download
+          persistentVolumeClaim:
+            claimName: media-server-download
+        - name: media-server-movies
+          persistentVolumeClaim:
+            claimName: media-server-movies
+        - configMap:
+            name: radarr-db-queries
+          name: radarr-db-queries

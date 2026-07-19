@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+  namespace: auth-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: caddy
+  template:
+    metadata:
+      annotations:
+        meta.config.hash: 31e088d7169e26c08602becc80b0524cec7ee923a431ce767a678921c04d94a5
+      labels:
+        app.kubernetes.io/name: caddy
+    spec:
+      containers:
+        - image: caddy:2.11.4
+          name: caddy
+          volumeMounts:
+            - mountPath: /etc/caddy/Caddyfile
+              name: config
+              subPath: Caddyfile
+      volumes:
+        - configMap:
+            name: caddy
+          name: config

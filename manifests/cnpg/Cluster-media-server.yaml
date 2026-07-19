@@ -1,0 +1,39 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: media-server
+  namespace: media-server
+spec:
+  instances: 1
+  managed:
+    roles:
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: prowlarr
+        passwordSecret:
+          name: prowlarr
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: radarr
+        passwordSecret:
+          name: radarr
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: seerr
+        passwordSecret:
+          name: seerr
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: sonarr
+        passwordSecret:
+          name: sonarr
+  storage:
+    size: 10Gi

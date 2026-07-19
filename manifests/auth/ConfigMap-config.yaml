@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  configuration.yml: '{"access_control":{"default_policy":"deny","rules":[{"domain":"longhorn.sfdr.me","policy":"one_factor","subject":["group:cluster_admin"]},{"domain":"prowlarr.sfdr.me","policy":"one_factor","subject":["group:media_admin"]},{"domain":"radarr.sfdr.me","policy":"one_factor","subject":["group:media_admin"]},{"domain":"nzb.sfdr.me","policy":"one_factor","subject":["group:media_admin"]},{"domain":"sonarr.sfdr.me","policy":"one_factor","subject":["group:media_admin"]},{"domain":"tx.sfdr.me","policy":"one_factor","subject":["group:media_admin"]}]},"authentication_backend":{"ldap":{"address":"ldap://lldap.auth-system.svc.cluster.local:3890","base_dn":"DC=sfdr,DC=me","implementation":"lldap","user":"UID=admin,OU=people,DC=sfdr,DC=me"},"password_change":{"disable":true},"password_reset":{"disable":true},"refresh_interval":"disable"},"notifier":{"disable_startup_check":true,"filesystem":{"filename":"/tmp/notification.txt"}},"session":{"cookies":[{"authelia_url":"https://auth.sfdr.me","domain":"sfdr.me"}]},"storage":{"postgres":{"address":"tcp://auth-rw.auth-system.svc.cluster.local","database":"authelia","username":"authelia"}},"theme":"auto"}'
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: auth-system

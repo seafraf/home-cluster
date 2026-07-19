@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rancher
+  namespace: argocd
+spec:
+  destination:
+    namespace: cattle-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./manifests/rancher
+    repoURL: git@github.com:seafraf/home-cluster.git
+    targetRevision: manifests/home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

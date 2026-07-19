@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auth
+  namespace: argocd
+spec:
+  destination:
+    namespace: auth-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./manifests/auth
+    repoURL: git@github.com:seafraf/home-cluster.git
+    targetRevision: manifests/home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

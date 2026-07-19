@@ -1,0 +1,106 @@
+apiVersion: v1
+data:
+  Caddyfile: |
+    {
+      auto_https off
+    }
+    longhorn.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy longhorn-frontend.longhorn-system.svc.cluster.local:80
+    }
+    prowlarr.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy prowlarr.media-server.svc.cluster.local:9696
+    }
+    radarr.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy radarr.media-server.svc.cluster.local:7878
+    }
+    nzb.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy sabnzbd.media-server.svc.cluster.local:8080
+    }
+    sonarr.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy sonarr.media-server.svc.cluster.local:8989
+    }
+    tx.sfdr.me:80 {
+        forward_auth authelia.auth-system.svc.cluster.local:9091 {
+            uri /api/authz/forward-auth
+
+            copy_headers \
+                Remote-User \
+                Remote-Groups \
+                Remote-Name \
+                Remote-Email
+
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-Host {host}
+        }
+
+        reverse_proxy transmission.media-server.svc.cluster.local:9091
+    }
+kind: ConfigMap
+metadata:
+  name: caddy
+  namespace: auth-system

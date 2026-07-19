@@ -1,0 +1,25 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: auth
+  namespace: auth-system
+spec:
+  instances: 1
+  managed:
+    roles:
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: authelia
+        passwordSecret:
+          name: authelia
+      - connectionLimit: -1
+        ensure: present
+        inherit: true
+        login: true
+        name: lldap
+        passwordSecret:
+          name: lldap
+  storage:
+    size: 10Gi

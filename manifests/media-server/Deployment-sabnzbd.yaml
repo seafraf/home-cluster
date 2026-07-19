@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sabnzbd
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sabnzbd
+  template:
+    metadata:
+      annotations:
+        meta.queries.hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        meta.secret.hash: 03df47e003c1e477ba28263e0edcc827c5c3b8f4eda094485c42d73f391be298
+      labels:
+        app.kubernetes.io/name: sabnzbd
+    spec:
+      containers:
+        - env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "2000"
+            - name: TZ
+              value: Europe/Stockholm
+            - name: UMASK
+              value: "002"
+          image: linuxserver/sabnzbd:5.0.4
+          name: sabnzbd
+          volumeMounts:
+            - mountPath: /config
+              name: media-server-config
+              subPath: sabnzbd
+            - mountPath: /media/download
+              name: media-server-download
+      enableServiceLinks: false
+      initContainers: []
+      securityContext:
+        fsGroup: 2000
+      volumes:
+        - name: media-server-config
+          persistentVolumeClaim:
+            claimName: media-server-config
+        - name: media-server-download
+          persistentVolumeClaim:
+            claimName: media-server-download

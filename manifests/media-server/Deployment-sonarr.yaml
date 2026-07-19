@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sonarr
+  template:
+    metadata:
+      annotations:
+        meta.queries.hash: 896337e277cdb9b8a4ded0c6688418517eb302a1d459d0f0048de2748565db0f
+        meta.secret.hash: 03df47e003c1e477ba28263e0edcc827c5c3b8f4eda094485c42d73f391be298
+      labels:
+        app.kubernetes.io/name: sonarr
+    spec:
+      containers:
+        - env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "2000"
+            - name: TZ
+              value: Europe/Stockholm
+            - name: UMASK
+              value: "002"
+            - name: SONARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: SONARR_API_KEY
+                  name: media-server-secrets
+            - name: SONARR__AUTH__METHOD
+              value: External
+            - name: SONARR__POSTGRES__HOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: SONARR__POSTGRES__USER
+              value: sonarr
+            - name: SONARR__POSTGRES__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: sonarr
+            - name: SONARR__POSTGRES__MAINDB
+              value: sonarr
+            - name: SONARR__LOG__DBENABLED
+              value: "False"
+          image: linuxserver/sonarr:4.0.19
+          name: sonarr
+          volumeMounts:
+            - mountPath: /config
+              name: media-server-config
+              subPath: sonarr
+            - mountPath: /media/download
+              name: media-server-download
+            - mountPath: /media/anime
+              name: media-server-anime
+            - mountPath: /media/series
+              name: media-server-series
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query0
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: sonarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: sonarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query0
+          volumeMounts:
+            - mountPath: /queries
+              name: sonarr-db-queries
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query1
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: sonarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: sonarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query1
+          volumeMounts:
+            - mountPath: /queries
+              name: sonarr-db-queries
+        - command:
+            - sh
+            - -c
+            - psql -v ON_ERROR_STOP=1 -v SABNZDB_API_KEY="$SABNZDB_API_KEY" -v PLEX_TOKEN="$PLEX_TOKEN" -v JELLYFIN_API_KEY="$JELLYFIN_API_KEY" -f /queries/query2
+          env:
+            - name: PGHOST
+              value: media-server-rw.media-server.svc.cluster.local
+            - name: PGUSER
+              value: sonarr
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: sonarr
+            - name: SABNZDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SABNZDB_API_KEY
+                  name: media-server-secrets
+            - name: PLEX_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: PLEX_TOKEN
+                  name: media-server-secrets
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: JELLYFIN_API_KEY
+                  name: media-server-secrets
+          image: postgres:16-alpine
+          name: exec-query-query2
+          volumeMounts:
+            - mountPath: /queries
+              name: sonarr-db-queries
+      securityContext:
+        fsGroup: 2000
+      volumes:
+        - name: media-server-config
+          persistentVolumeClaim:
+            claimName: media-server-config
+        - name: media-server-download
+          persistentVolumeClaim:
+            claimName: media-server-download
+        - name: media-server-anime
+          persistentVolumeClaim:
+            claimName: media-server-anime
+        - name: media-server-series
+          persistentVolumeClaim:
+            claimName: media-server-series
+        - configMap:
+            name: sonarr-db-queries
+          name: sonarr-db-queries

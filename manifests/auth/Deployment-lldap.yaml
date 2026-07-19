@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lldap
+  namespace: auth-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lldap
+  template:
+    metadata:
+      annotations:
+        meta.secrets.hash: a64844dfa7732f397af6e4ce498f881494ea1c27a6769e3f2abef0ad3ac3be16
+      labels:
+        app.kubernetes.io/name: lldap
+    spec:
+      containers:
+        - env:
+            - name: LLDAP_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: LLDAP_JWT_SECRET
+                  name: auth-secrets
+            - name: LLDAP_KEY_SEED
+              valueFrom:
+                secretKeyRef:
+                  key: LLDAP_KEY_SEED
+                  name: auth-secrets
+            - name: LLDAP_LDAP_BASE_DN
+              value: DC=sfdr,DC=me
+            - name: LLDAP_LDAP_USER_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: LDAP_PASSWORD
+                  name: auth-secrets
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: lldap
+            - name: LLDAP_DATABASE_URL
+              value: postgres://lldap:$(POSTGRES_PASSWORD)@auth-rw.auth-system.svc.cluster.local/lldap
+          image: lldap/lldap:stable
+          name: lldap
+      enableServiceLinks: false
+      volumes:
+        - name: db-secret
+          secret:
+            items:
+              - key: password
+                path: POSTGRES_PASSWORD
+            secretName: lldap

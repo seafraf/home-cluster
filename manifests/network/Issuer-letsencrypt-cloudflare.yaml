@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-cloudflare
+  namespace: network
+spec:
+  acme:
+    email: seafraf@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              key: cloudflare-api-token
+              name: network-secrets

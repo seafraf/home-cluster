@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: media-server-prowlarr
+  namespace: media-server
+spec:
+  cluster:
+    name: media-server
+  name: prowlarr
+  owner: prowlarr

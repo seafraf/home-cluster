@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: media-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: plex
+  template:
+    metadata:
+      annotations:
+        meta.queries.hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        meta.secret.hash: 03df47e003c1e477ba28263e0edcc827c5c3b8f4eda094485c42d73f391be298
+      labels:
+        app.kubernetes.io/name: plex
+    spec:
+      containers:
+        - env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "2000"
+            - name: TZ
+              value: Europe/Stockholm
+            - name: UMASK
+              value: "002"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+            - name: LD_LIBRARY_PATH
+              value: /usr/local/nvidia/lib64/
+          image: linuxserver/plex:version-1.43.3.10828-00f62d37d
+          name: plex
+          volumeMounts:
+            - mountPath: /config
+              name: media-server-config
+              subPath: plex
+            - mountPath: /media/transcode
+              name: media-server-transcode
+              subPath: plex
+            - mountPath: /media/anime
+              name: media-server-anime
+            - mountPath: /media/series
+              name: media-server-series
+            - mountPath: /media/movies
+              name: media-server-movies
+      enableServiceLinks: false
+      initContainers: []
+      runtimeClassName: nvidia
+      securityContext:
+        fsGroup: 2000
+      volumes:
+        - name: media-server-config
+          persistentVolumeClaim:
+            claimName: media-server-config
+        - name: media-server-transcode
+          persistentVolumeClaim:
+            claimName: media-server-transcode
+        - name: media-server-anime
+          persistentVolumeClaim:
+            claimName: media-server-anime
+        - name: media-server-series
+          persistentVolumeClaim:
+            claimName: media-server-series
+        - name: media-server-movies
+          persistentVolumeClaim:
+            claimName: media-server-movies

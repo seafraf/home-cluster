@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  name: lldap
+  namespace: auth-system
+spec:
+  ports:
+    - name: http
+      port: 17170
+      targetPort: 17170
+    - name: ldap
+      port: 3890
+      targetPort: 3890
+    - name: ldaps
+      port: 6360
+      targetPort: 6360
+  selector:
+    app.kubernetes.io/name: lldap

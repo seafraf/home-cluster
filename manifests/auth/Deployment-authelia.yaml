@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authelia
+  namespace: auth-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: authelia
+  template:
+    metadata:
+      annotations:
+        meta.config.hash: 40e39295b6c0e7f588c13f2ea7794bd3324f49f3bc114109706ff3e75cdf302c
+        meta.secret.hash: a64844dfa7732f397af6e4ce498f881494ea1c27a6769e3f2abef0ad3ac3be16
+      labels:
+        app.kubernetes.io/name: authelia
+    spec:
+      containers:
+        - args:
+            - --config
+            - /config/configuration.yml
+          command:
+            - authelia
+          env:
+            - name: AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
+              value: /app/secrets/JWT_SECRET
+            - name: AUTHELIA_SESSION_SECRET_FILE
+              value: /app/secrets/SESSION_SECRET
+            - name: AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE
+              value: /app/secrets/LDAP_PASSWORD
+            - name: AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE
+              value: /app/secrets/STORAGE_ENCRYPTION_KEY
+            - name: AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE
+              value: /app/db-secret/POSTGRES_PASSWORD
+          image: authelia/authelia:4.39
+          name: authelia
+          volumeMounts:
+            - mountPath: /config/configuration.yml
+              name: config
+              subPath: configuration.yml
+            - mountPath: /app/secrets
+              name: secrets
+              readOnly: true
+            - mountPath: /app/db-secret
+              name: db-secret
+              readOnly: true
+      enableServiceLinks: false
+      volumes:
+        - configMap:
+            name: config
+          name: config
+        - name: secrets
+          secret:
+            items:
+              - key: JWT_SECRET
+                path: JWT_SECRET
+              - key: SESSION_SECRET
+                path: SESSION_SECRET
+              - key: LDAP_PASSWORD
+                path: LDAP_PASSWORD
+              - key: STORAGE_ENCRYPTION_KEY
+                path: STORAGE_ENCRYPTION_KEY
+            secretName: auth-secrets
+        - name: db-secret
+          secret:
+            items:
+              - key: password
+                path: POSTGRES_PASSWORD
+            secretName: authelia
